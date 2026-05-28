@@ -1,9 +1,13 @@
 #include "MainWindow.h"
 
 #include <QCoreApplication>
+#include <QFrame>
+#include <QGridLayout>
+#include <QHBoxLayout>
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QPixmap>
+#include <QSizePolicy>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 
@@ -13,35 +17,27 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui.setupUi(this);
 
-    // Set live cameras as the default active page
     setNavActive(ui.liveCamerasButton);
 
-    // Nav buttons
     connect(ui.liveCamerasButton, &QPushButton::clicked, this, &MainWindow::onLiveCamerasClicked);
     connect(ui.incidentsButton,   &QPushButton::clicked, this, &MainWindow::onIncidentsClicked);
     connect(ui.settingsButton,    &QPushButton::clicked, this, &MainWindow::onSettingsClicked);
 
-    // Settings — camera form
-    connect(ui.saveCameraButton,    &QPushButton::clicked,            this, &MainWindow::onSaveCameraClicked);
-    connect(ui.cancelCameraButton,  &QPushButton::clicked,            this, &MainWindow::onCancelCameraClicked);
-    connect(ui.deleteCameraButton,  &QPushButton::clicked,            this, &MainWindow::onDeleteCameraClicked);
+    connect(ui.saveCameraButton,    &QPushButton::clicked,               this, &MainWindow::onSaveCameraClicked);
+    connect(ui.cancelCameraButton,  &QPushButton::clicked,               this, &MainWindow::onCancelCameraClicked);
+    connect(ui.deleteCameraButton,  &QPushButton::clicked,               this, &MainWindow::onDeleteCameraClicked);
     connect(ui.cameraConfigTable,   &QTableWidget::itemSelectionChanged, this, [this]() {
         ui.deleteCameraButton->setEnabled(ui.cameraConfigTable->currentRow() >= 0);
     });
 
-    // Reset all 4 camera slots to unconfigured state
-    for (int i = 0; i < 4; ++i) {
-        if (auto* lbl = titleLabelAt(i))   lbl->setText(QString("Camera %1").arg(i + 1));
-        if (auto* lbl = frameLabelAt(i))   lbl->setText("No camera configured");
-        if (auto* lbl = statusLabelAt(i))  lbl->setVisible(false);
-    }
+    // Make the scroll area background match the page background
+    ui.cameraScrollArea->viewport()->setStyleSheet("background-color: #070d1a;");
 
-    // Open DB and restore saved cameras
-    m_store.open();
-    for (const auto& cfg : m_store.loadAll())
-        registerCamera(cfg);
+    // Equal-width columns in the camera grid
+    auto* grid = qobject_cast<QGridLayout*>(ui.cameraScrollContents->layout());
+    grid->setColumnStretch(0, 1);
+    grid->setColumnStretch(1, 1);
 
-    // CameraManager callbacks — marshal from worker threads to GUI thread
     cameraManager.setFrameCallback([this](int index, const QImage& image) {
         QMetaObject::invokeMethod(this, [this, index, image]() {
             updateCameraFrame(index, image);
@@ -53,6 +49,11 @@ MainWindow::MainWindow(QWidget *parent)
             updateCameraError(index, message);
         }, Qt::QueuedConnection);
     });
+
+    m_store.open();
+    for (const auto& cfg : m_store.loadAll())
+        registerCamera(cfg);
+    cameraManager.startAll();
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
@@ -96,7 +97,6 @@ void MainWindow::onSaveCameraClicked() {
     const QString url      = ui.cameraUrlInput->text().trimmed();
     const QString password = ui.cameraPasswordInput->text().trimmed();
     const QString location = ui.cameraLocationInput->text().trimmed();
-    const bool    enabled  = ui.cameraEnabledCheckbox->isChecked();
 
     const bool nameValid = !name.isEmpty();
     const bool urlValid  = !url.isEmpty();
@@ -112,10 +112,10 @@ void MainWindow::onSaveCameraClicked() {
     cfg.url      = url;
     cfg.password = password;
     cfg.location = location;
-    cfg.enabled  = enabled;
 
     cfg.id = m_store.save(cfg);
     registerCamera(cfg);
+    cameraManager.startAll();
     clearCameraForm();
 }
 
@@ -140,47 +140,103 @@ void MainWindow::onDeleteCameraClicked() {
     const int id = ui.cameraConfigTable->item(row, 0)->data(Qt::UserRole).toInt();
     m_store.remove(id);
 
-    // Stop all workers, reset cards, then rebuild from remaining DB rows
     cameraManager.stopAll();
-    m_cameraCount = 0;
-
-    for (int i = 0; i < 4; ++i) {
-        if (auto* lbl = titleLabelAt(i))  lbl->setText(QString("Camera %1").arg(i + 1));
-        if (auto* lbl = frameLabelAt(i))  lbl->setText("No camera configured");
-        if (auto* lbl = statusLabelAt(i)) lbl->setVisible(false);
-    }
-
+    clearCameraCards();
     ui.cameraConfigTable->setRowCount(0);
     ui.deleteCameraButton->setEnabled(false);
 
     for (const auto& cfg : m_store.loadAll())
         registerCamera(cfg);
+    cameraManager.startAll();
 }
 
 void MainWindow::registerCamera(const CameraConfig& cfg) {
-    int row = ui.cameraConfigTable->rowCount();
+    const int row = ui.cameraConfigTable->rowCount();
     ui.cameraConfigTable->insertRow(row);
     auto* nameItem = new QTableWidgetItem(cfg.name);
     nameItem->setData(Qt::UserRole, cfg.id);
     ui.cameraConfigTable->setItem(row, 0, nameItem);
     ui.cameraConfigTable->setItem(row, 1, new QTableWidgetItem(cfg.url));
     ui.cameraConfigTable->setItem(row, 2, new QTableWidgetItem(cfg.location));
-    ui.cameraConfigTable->setItem(row, 3, new QTableWidgetItem(cfg.enabled ? "Enabled" : "Disabled"));
 
-    if (cfg.enabled && m_cameraCount < 4) {
-        const int cardIndex = m_cameraCount++;
+    const int cardIndex = static_cast<int>(m_frameLabels.size());
+    addCameraCard(cardIndex, cfg);
+    cameraManager.addCamera(cfg);
+}
 
-        if (auto* lbl = titleLabelAt(cardIndex)) {
-            const QString title = cfg.location.isEmpty() ? cfg.name : cfg.name + " \xe2\x80\x94 " + cfg.location;
-            lbl->setText(title);
-        }
-        if (auto* status = statusLabelAt(cardIndex)) {
-            status->setVisible(true);
-            status->setText("● CONNECTING");
-        }
+void MainWindow::addCameraCard(int cardIndex, const CameraConfig& cfg) {
+    auto* frame = new QFrame(ui.cameraScrollContents);
+    frame->setStyleSheet(
+        "QFrame { background-color: #030711; border: 1px solid #1a2540; border-radius: 12px; }"
+    );
+    frame->setMinimumHeight(260);
 
-        cameraManager.addCamera(cfg);
-        cameraManager.startAll();
+    auto* cardLayout = new QGridLayout(frame);
+    cardLayout->setContentsMargins(0, 0, 0, 0);
+    cardLayout->setSpacing(0);
+
+    auto* placeholder = new QLabel("No feed connected", frame);
+    placeholder->setAlignment(Qt::AlignCenter);
+    placeholder->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    placeholder->setMinimumSize(1, 1);
+    placeholder->setStyleSheet(
+        "background-color: #030711; color: #1e3a5f; font-size: 13px; font-weight: 500;"
+    );
+    cardLayout->addWidget(placeholder, 0, 0);
+
+    auto* overlay = new QWidget(frame);
+    overlay->setStyleSheet(
+        "background: qlineargradient(x1:0, y1:0, x2:0, y2:1,"
+        " stop:0 rgba(3,7,17,0.88), stop:1 rgba(3,7,17,0));"
+    );
+    auto* overlayLayout = new QHBoxLayout(overlay);
+    overlayLayout->setContentsMargins(12, 8, 12, 8);
+    overlayLayout->setSpacing(8);
+
+    const QString title = cfg.location.isEmpty()
+        ? cfg.name
+        : cfg.name + " \xe2\x80\x94 " + cfg.location;
+    auto* titleLabel = new QLabel(title, overlay);
+    titleLabel->setStyleSheet(
+        "color: #e2e8f0; font-size: 13px; font-weight: 600; background-color: transparent;"
+    );
+    overlayLayout->addWidget(titleLabel);
+    overlayLayout->addStretch();
+
+    auto* statusLabel = new QLabel("● CONNECTING", overlay);
+    statusLabel->setStyleSheet(
+        "background-color: rgba(16, 185, 129, 0.15);"
+        " color: #34d399;"
+        " border: 1px solid rgba(16, 185, 129, 0.3);"
+        " border-radius: 8px;"
+        " padding: 3px 10px;"
+        " font-size: 11px;"
+        " font-weight: 700;"
+        " letter-spacing: 0.5px;"
+    );
+    overlayLayout->addWidget(statusLabel);
+
+    cardLayout->addWidget(overlay, 0, 0, Qt::AlignTop);
+
+    auto* grid = qobject_cast<QGridLayout*>(ui.cameraScrollContents->layout());
+    grid->addWidget(frame, cardIndex / 2, cardIndex % 2);
+
+    m_frameLabels.append(placeholder);
+    m_titleLabels.append(titleLabel);
+    m_statusLabels.append(statusLabel);
+}
+
+void MainWindow::clearCameraCards() {
+    m_frameLabels.clear();
+    m_titleLabels.clear();
+    m_statusLabels.clear();
+
+    auto* grid = qobject_cast<QGridLayout*>(ui.cameraScrollContents->layout());
+    while (grid->count() > 0) {
+        auto* item = grid->takeAt(0);
+        if (auto* widget = item->widget())
+            widget->deleteLater();
+        delete item;
     }
 }
 
@@ -190,7 +246,6 @@ void MainWindow::clearCameraForm() {
     ui.cameraUsernameInput->clear();
     ui.cameraPasswordInput->clear();
     ui.cameraLocationInput->clear();
-    ui.cameraEnabledCheckbox->setChecked(true);
     ui.cameraNameInput->setStyleSheet("");
     ui.cameraUrlInput->setStyleSheet("");
 }
@@ -201,8 +256,11 @@ void MainWindow::updateCameraFrame(int index, const QImage &image) {
     QLabel* frame = frameLabelAt(index);
     if (!frame) return;
 
+    const QSize available = frame->contentsRect().size();
+    if (available.isEmpty()) return;
+
     frame->setPixmap(
-        QPixmap::fromImage(image).scaled(frame->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation)
+        QPixmap::fromImage(image).scaled(available, Qt::KeepAspectRatio, Qt::SmoothTransformation)
     );
 
     if (auto* status = statusLabelAt(index))
@@ -221,31 +279,13 @@ void MainWindow::updateCameraError(int index, const QString &message) {
 // ── Per-index label helpers ────────────────────────────────────────────────────
 
 QLabel* MainWindow::frameLabelAt(int index) const {
-    switch (index) {
-        case 0: return ui.cameraPlaceholder1;
-        case 1: return ui.cameraPlaceholder2;
-        case 2: return ui.cameraPlaceholder3;
-        case 3: return ui.cameraPlaceholder4;
-        default: return nullptr;
-    }
+    return (index >= 0 && index < m_frameLabels.size()) ? m_frameLabels[index] : nullptr;
 }
 
 QLabel* MainWindow::statusLabelAt(int index) const {
-    switch (index) {
-        case 0: return ui.cameraStatusLabel1;
-        case 1: return ui.cameraStatusLabel2;
-        case 2: return ui.cameraStatusLabel3;
-        case 3: return ui.cameraStatusLabel4;
-        default: return nullptr;
-    }
+    return (index >= 0 && index < m_statusLabels.size()) ? m_statusLabels[index] : nullptr;
 }
 
 QLabel* MainWindow::titleLabelAt(int index) const {
-    switch (index) {
-        case 0: return ui.cameraTitleLabel1;
-        case 1: return ui.cameraTitleLabel2;
-        case 2: return ui.cameraTitleLabel3;
-        case 3: return ui.cameraTitleLabel4;
-        default: return nullptr;
-    }
+    return (index >= 0 && index < m_titleLabels.size()) ? m_titleLabels[index] : nullptr;
 }

@@ -4,20 +4,32 @@
 
 CameraCapture::CameraCapture(CameraConfig config) : config(std::move(config))
 {
-}	
+}
 
 bool CameraCapture::open()
 {
-	return capture.open(config.url.toStdString());
+	try {
+		if (!capture.open(config.url.toStdString()))
+			return false;
+		capture.set(cv::CAP_PROP_BUFFERSIZE, 1);
+		return true;
+	} catch (const cv::Exception&) {
+		return false;
+	} catch (const std::exception&) {
+		return false;
+	}
 }
 
 bool CameraCapture::readFrame(cv::Mat& frame)
 {
 	if (!capture.isOpened()) return false;
 
-	const bool success = capture.read(frame);
-
-	return success && !frame.empty();
+	try {
+		const bool success = capture.read(frame);
+		return success && !frame.empty();
+	} catch (const cv::Exception&) {
+		return false;
+	}
 }
 
 void CameraCapture::close()

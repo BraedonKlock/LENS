@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
+#include <QVector>
 
 #include "ui_MainWindow.h"
 #include "camera/CameraManager.h"
@@ -26,12 +27,17 @@ private:
     Ui::MainWindow ui;
     CameraManager cameraManager;
     CameraStore m_store;
-    int m_cameraCount = 0;
+
+    QVector<QLabel*> m_frameLabels;
+    QVector<QLabel*> m_titleLabels;
+    QVector<QLabel*> m_statusLabels;
 
     void switchToPage(int index, const QString &title, const QString &subtitle);
     void setNavActive(QPushButton *active);
     void clearCameraForm();
     void registerCamera(const CameraConfig& config);
+    void addCameraCard(int cardIndex, const CameraConfig& cfg);
+    void clearCameraCards();
 
     void updateCameraFrame(int index, const QImage &image);
     void updateCameraError(int index, const QString &message);

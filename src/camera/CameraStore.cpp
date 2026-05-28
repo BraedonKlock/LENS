@@ -29,8 +29,7 @@ bool CameraStore::createTable()
         "  name     TEXT NOT NULL,"
         "  url      TEXT NOT NULL,"
         "  password TEXT,"
-        "  location TEXT,"
-        "  enabled  INTEGER NOT NULL DEFAULT 1"
+        "  location TEXT"
         ")"
     );
 }
@@ -39,14 +38,13 @@ int CameraStore::save(const CameraConfig& config)
 {
     QSqlQuery q(QSqlDatabase::database(DB_CONNECTION));
     q.prepare(
-        "INSERT INTO cameras (name, url, password, location, enabled) "
-        "VALUES (:name, :url, :password, :location, :enabled)"
+        "INSERT INTO cameras (name, url, password, location) "
+        "VALUES (:name, :url, :password, :location)"
     );
     q.bindValue(":name",     config.name);
     q.bindValue(":url",      config.url);
     q.bindValue(":password", config.password);
     q.bindValue(":location", config.location);
-    q.bindValue(":enabled",  config.enabled ? 1 : 0);
 
     if (!q.exec()) return -1;
     return static_cast<int>(q.lastInsertId().toLongLong());
@@ -65,7 +63,7 @@ std::vector<CameraConfig> CameraStore::loadAll() const
     std::vector<CameraConfig> configs;
 
     QSqlQuery q(QSqlDatabase::database(DB_CONNECTION));
-    q.exec("SELECT id, name, url, password, location, enabled FROM cameras ORDER BY id");
+    q.exec("SELECT id, name, url, password, location FROM cameras ORDER BY id");
 
     while (q.next()) {
         CameraConfig cfg;
@@ -74,7 +72,6 @@ std::vector<CameraConfig> CameraStore::loadAll() const
         cfg.url      = q.value(2).toString();
         cfg.password = q.value(3).toString();
         cfg.location = q.value(4).toString();
-        cfg.enabled  = q.value(5).toInt() != 0;
         configs.push_back(cfg);
     }
 

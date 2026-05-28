@@ -10,6 +10,5 @@ struct CameraConfig
 	QString url;
 	QString password;
 	QString location;
-	bool enabled = true;
 };
 #endif

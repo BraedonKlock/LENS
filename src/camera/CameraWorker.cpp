@@ -46,39 +46,41 @@ void CameraWorker::setErrorCallback(ErrorCallback callback)
 
 void CameraWorker::run()
 {
-	if (!camera.open())
-	{
-		if (onError)
-		{
-			onError(cameraIndex, "Falied to open camera: " + config.name);
-		}
-		
-		running = false;
-		return;
-	}
-
 	while (running)
 	{
-		cv::Mat frame;
-
-		if (!camera.readFrame(frame))
+		if (!camera.open())
 		{
-			if (onError)
+			if (onError) onError(cameraIndex, "Failed to open camera: " + config.name);
+
+			// Wait 8 seconds then retry
+			for (int i = 0; i < 80 && running; ++i)
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+			continue;
+		}
+
+		auto lastEmit = std::chrono::steady_clock::now();
+
+		while (running)
+		{
+			cv::Mat frame;
+
+			if (!camera.readFrame(frame))
 			{
-				onError(cameraIndex, "Failed to read frame from camera: " + config.name);
+				if (onError) onError(cameraIndex, "Lost connection: " + config.name);
+				camera.close();
+				break;
 			}
-			
-			break;
-		}
-		
-		QImage image = convertMatToQImage(frame);
 
-		if (!image.isNull() && onFrame)
-		{
-			onFrame(cameraIndex, image);
+			const auto now = std::chrono::steady_clock::now();
+			if (now - lastEmit >= std::chrono::milliseconds(33))
+			{
+				QImage image = convertMatToQImage(frame);
+				if (!image.isNull() && onFrame)
+					onFrame(cameraIndex, image);
+				lastEmit = now;
+			}
 		}
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(30));
 	}
 
 	camera.close();
@@ -88,21 +90,23 @@ void CameraWorker::run()
 
 QImage CameraWorker::convertMatToQImage(const cv::Mat& frame) const
 {
-	if (frame.empty()) 
-	{
-        	return {};
-    	}
+	if (frame.empty())
+		return {};
 
-    	cv::Mat rgbFrame;
-    	cv::cvtColor(frame, rgbFrame, cv::COLOR_BGR2RGB);
+	cv::Mat rgbFrame;
+	switch (frame.channels()) {
+		case 4:  cv::cvtColor(frame, rgbFrame, cv::COLOR_BGRA2RGB); break;
+		case 1:  cv::cvtColor(frame, rgbFrame, cv::COLOR_GRAY2RGB); break;
+		default: cv::cvtColor(frame, rgbFrame, cv::COLOR_BGR2RGB);  break;
+	}
 
-    	QImage image(
-        	rgbFrame.data,
-        	rgbFrame.cols,
-        	rgbFrame.rows,
-        	static_cast<int>(rgbFrame.step),
-        	QImage::Format_RGB888
-    	);
+	QImage image(
+		rgbFrame.data,
+		rgbFrame.cols,
+		rgbFrame.rows,
+		static_cast<int>(rgbFrame.step),
+		QImage::Format_RGB888
+	);
 
-    	return image.copy();
+	return image.copy();
 }
