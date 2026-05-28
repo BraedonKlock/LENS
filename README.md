@@ -108,9 +108,18 @@ LENS/
 │
 ├── CMakeLists.txt
 ├── includes
+│   ├── camera
+│   │   ├── CameraCapture.h
+│   │   ├── CameraConfig.h
+│   │   ├── CameraManager.h
+│   │   └── CameraWorker.h
 │   └── MainWindow.h
 ├── README.md
 ├── src
+│   ├── camera
+│   │   ├── CameraCapture.cpp
+│   │   ├── CameraManager.cpp
+│   │   └── CameraWorker.cpp
 │   ├── main.cpp
 │   └── MainWindow.cpp
 └── ui
