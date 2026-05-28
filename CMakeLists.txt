@@ -23,16 +23,29 @@ else()
     set(QT_VERSION_MAJOR 5)
 endif()
 
+find_package(OpenCV REQUIRED)
+
 add_executable(LENS
     src/main.cpp
     src/MainWindow.cpp
+
+    src/camera/CameraCapture.cpp
+    src/camera/CameraManager.cpp
+    src/camera/CameraWorker.cpp
+
     includes/MainWindow.h
+    includes/camera/CameraConfig.h
+    includes/camera/CameraCapture.h
+    includes/camera/CameraManager.h
+    includes/camera/CameraWorker.h
+
     ui/MainWindow.ui
 )
 
 target_include_directories(LENS PRIVATE
     includes
     ${CMAKE_CURRENT_SOURCE_DIR}/ui
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 target_compile_options(LENS PRIVATE
@@ -44,7 +57,7 @@ target_compile_options(LENS PRIVATE
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    target_link_libraries(LENS PRIVATE Qt6::Widgets)
+    target_link_libraries(LENS PRIVATE Qt6::Widgets ${OpenCV_LIBS})
 else()
-    target_link_libraries(LENS PRIVATE Qt5::Widgets)
+    target_link_libraries(LENS PRIVATE Qt5::Widgets ${OpenCV_LIBS})
 endif()

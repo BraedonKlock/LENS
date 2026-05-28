@@ -1,6 +1,8 @@
 #ifndef CAMERACAPTURE_H
 #define CAMERACAPTURE_H
 
+#include "camera/CameraConfig.h"
+
 #include <opencv2/opencv.hpp>
 
 class CameraCapture

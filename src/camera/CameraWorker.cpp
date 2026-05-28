@@ -15,7 +15,7 @@ CameraWorker::~CameraWorker()
 	stop();
 }
 
-void start()
+void CameraWorker::start()
 {
 	if (running) return;
 
@@ -24,7 +24,7 @@ void start()
 	workerThread = std::thread(&CameraWorker::run, this);
 }
 
-void CamerWorker::stop()
+void CameraWorker::stop()
 {
 	running = false;
 
@@ -73,7 +73,7 @@ void CameraWorker::run()
 		
 		QImage image = convertMatToQImage(frame);
 
-		if (!image.isNull && onFrame)
+		if (!image.isNull() && onFrame)
 		{
 			onFrame(cameraIndex, image);
 		}
@@ -81,7 +81,7 @@ void CameraWorker::run()
 		std::this_thread::sleep_for(std::chrono::milliseconds(30));
 	}
 
-	camera.close;
+	camera.close();
 	running = false;
 }
 

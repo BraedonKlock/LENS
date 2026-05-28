@@ -19,7 +19,7 @@ class CameraWorker
 	CameraWorker(int cameraIndex, CameraConfig config);
 	CameraWorker(const CameraWorker&) = delete;
 
-	CamerWorker& operator=(const CameraWorker&) = delete;
+	CameraWorker& operator=(const CameraWorker&) = delete;
 	
 	void start();
 	void stop();
