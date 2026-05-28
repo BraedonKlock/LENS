@@ -1,8 +1,11 @@
 #pragma once
 
+#include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
+
 #include "ui_MainWindow.h"
+#include "camera/CameraManager.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -16,12 +19,20 @@ private slots:
     void onSettingsClicked();
     void onSaveCameraClicked();
     void onCancelCameraClicked();
-    void onAddCameraClicked();
 
 private:
     Ui::MainWindow ui;
+    CameraManager cameraManager;
+    int m_cameraCount = 0;
 
     void switchToPage(int index, const QString &title, const QString &subtitle);
     void setNavActive(QPushButton *active);
     void clearCameraForm();
+
+    void updateCameraFrame(int index, const QImage &image);
+    void updateCameraError(int index, const QString &message);
+
+    QLabel* frameLabelAt(int index) const;
+    QLabel* statusLabelAt(int index) const;
+    QLabel* titleLabelAt(int index) const;
 };
