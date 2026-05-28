@@ -1,0 +1,1541 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>760</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>LENS - Loss-prevention Event Notification System</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+* {
+    font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+}
+
+QMainWindow {
+    background-color: #070d1a;
+}
+
+QWidget#centralwidget {
+    background-color: #070d1a;
+    color: #e2e8f0;
+}
+
+/* ── SIDEBAR ──────────────────────────────── */
+QFrame#sidebarFrame {
+    background-color: #0b1220;
+    border-right: 1px solid #1a2540;
+}
+
+QLabel#appTitleLabel {
+    color: #f8fafc;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 3px;
+}
+
+QLabel#appSubtitleLabel {
+    color: #475569;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+}
+
+QFrame#sidebarDivider {
+    background-color: #1a2540;
+    max-height: 1px;
+    min-height: 1px;
+}
+
+QPushButton#liveCamerasButton,
+QPushButton#incidentsButton,
+QPushButton#settingsButton {
+    background-color: transparent;
+    color: #64748b;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+QPushButton#liveCamerasButton:hover,
+QPushButton#incidentsButton:hover,
+QPushButton#settingsButton:hover {
+    background-color: rgba(30, 41, 59, 0.7);
+    color: #cbd5e1;
+}
+
+QPushButton[navActive="true"] {
+    background-color: rgba(59, 130, 246, 0.12);
+    color: #93c5fd;
+    font-weight: 600;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+QPushButton[navActive="true"]:hover {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #bfdbfe;
+}
+
+QLabel#systemStatusLabel {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-weight: 600;
+    font-size: 12px;
+    qproperty-alignment: AlignCenter;
+}
+
+/* ── HEADER ───────────────────────────────── */
+QFrame#headerFrame {
+    background-color: #070d1a;
+    border-bottom: 1px solid #1a2540;
+}
+
+QLabel#pageTitleLabel {
+    color: #f8fafc;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+QLabel#pageSubtitleLabel {
+    color: #475569;
+    font-size: 13px;
+}
+
+QLabel#detectionStatusBadge {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+/* ── CAMERA CARDS ─────────────────────────── */
+QFrame#cameraCard1,
+QFrame#cameraCard2,
+QFrame#cameraCard3,
+QFrame#cameraCard4 {
+    background-color: #0d1424;
+    border: 1px solid #1a2540;
+    border-top: 2px solid #1e3a5f;
+    border-radius: 12px;
+}
+
+QLabel#cameraTitleLabel1,
+QLabel#cameraTitleLabel2,
+QLabel#cameraTitleLabel3,
+QLabel#cameraTitleLabel4 {
+    color: #e2e8f0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QLabel#cameraStatusLabel1,
+QLabel#cameraStatusLabel2,
+QLabel#cameraStatusLabel3,
+QLabel#cameraStatusLabel4 {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+QLabel#cameraPlaceholder1,
+QLabel#cameraPlaceholder2,
+QLabel#cameraPlaceholder3,
+QLabel#cameraPlaceholder4 {
+    background-color: #030711;
+    color: #1e3a5f;
+    border-radius: 8px;
+    border: 1px solid #111f35;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* ── INCIDENTS PAGE ───────────────────────── */
+QFrame#incidentPanel {
+    background-color: #0d1424;
+    border: 1px solid #1a2540;
+    border-radius: 12px;
+}
+
+QLabel#incidentPanelTitle {
+    color: #f8fafc;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+QTableWidget#incidentsTable {
+    background-color: #030711;
+    color: #cbd5e1;
+    border: 1px solid #1a2540;
+    border-radius: 8px;
+    gridline-color: #0d1a2e;
+    selection-background-color: rgba(59, 130, 246, 0.18);
+    selection-color: #93c5fd;
+    outline: none;
+}
+
+QTableWidget#incidentsTable::item {
+    padding: 10px 14px;
+    border-bottom: 1px solid #0d1a2e;
+}
+
+QTableWidget#incidentsTable::item:selected {
+    background-color: rgba(59, 130, 246, 0.18);
+    color: #93c5fd;
+}
+
+QHeaderView {
+    background-color: #0b1220;
+    border: none;
+}
+
+QHeaderView::section {
+    background-color: #0b1220;
+    color: #64748b;
+    border: none;
+    border-bottom: 1px solid #1a2540;
+    border-right: 1px solid #1a2540;
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+QHeaderView::section:last {
+    border-right: none;
+}
+
+/* ── SCROLLBARS ───────────────────────────── */
+QScrollBar:vertical {
+    background: #0b1220;
+    width: 7px;
+    border-radius: 4px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #1e3a5f;
+    border-radius: 4px;
+    min-height: 24px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #2563eb;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QScrollBar:horizontal {
+    background: #0b1220;
+    height: 7px;
+    border-radius: 4px;
+    margin: 0;
+}
+
+QScrollBar::handle:horizontal {
+    background: #1e3a5f;
+    border-radius: 4px;
+    min-width: 24px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background: #2563eb;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
+
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: none;
+}
+
+/* ── STATUS BAR ───────────────────────────── */
+QStatusBar {
+    background-color: #0b1220;
+    color: #334155;
+    border-top: 1px solid #1a2540;
+    font-size: 12px;
+}
+
+/* ── SETTINGS / CAMERA FORM ───────────────── */
+QFrame#cameraListPanel,
+QFrame#cameraFormPanel {
+    background-color: #0d1424;
+    border: 1px solid #1a2540;
+    border-radius: 12px;
+}
+
+QLabel#cameraListTitle,
+QLabel#cameraFormTitle {
+    color: #f8fafc;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+QLabel#labelCameraName,
+QLabel#labelCameraUrl,
+QLabel#labelCameraUsername,
+QLabel#labelCameraPassword,
+QLabel#labelCameraLocation {
+    color: #475569;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+QLabel#cameraUrlHint {
+    color: #1e3a5f;
+    font-size: 11px;
+}
+
+QTableWidget#cameraConfigTable {
+    background-color: #030711;
+    color: #cbd5e1;
+    border: 1px solid #1a2540;
+    border-radius: 8px;
+    gridline-color: #0d1a2e;
+    selection-background-color: rgba(59, 130, 246, 0.18);
+    selection-color: #93c5fd;
+    outline: none;
+}
+
+QTableWidget#cameraConfigTable::item {
+    padding: 10px 14px;
+    border-bottom: 1px solid #0d1a2e;
+}
+
+QTableWidget#cameraConfigTable::item:selected {
+    background-color: rgba(59, 130, 246, 0.18);
+    color: #93c5fd;
+}
+
+QLineEdit {
+    background-color: #0b1220;
+    color: #e2e8f0;
+    border: 1px solid #1a2540;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    selection-background-color: rgba(59, 130, 246, 0.3);
+}
+
+QLineEdit:focus {
+    border: 1px solid #3b82f6;
+    background-color: #0d1830;
+}
+
+QLineEdit:disabled {
+    color: #334155;
+    border-color: #111f35;
+}
+
+QCheckBox {
+    color: #94a3b8;
+    font-size: 13px;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 17px;
+    height: 17px;
+    border-radius: 5px;
+    border: 1px solid #1a2540;
+    background-color: #0b1220;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #2563eb;
+    border-color: #3b82f6;
+}
+
+QCheckBox::indicator:hover {
+    border-color: #3b82f6;
+}
+
+QPushButton#addCameraButton {
+    background-color: rgba(37, 99, 235, 0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton#addCameraButton:hover {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+}
+
+QPushButton#saveCameraButton {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton#saveCameraButton:hover {
+    background-color: #3b82f6;
+}
+
+QPushButton#saveCameraButton:pressed {
+    background-color: #1d4ed8;
+}
+
+QPushButton#cancelCameraButton {
+    background-color: transparent;
+    color: #64748b;
+    border: 1px solid #1a2540;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+QPushButton#cancelCameraButton:hover {
+    background-color: rgba(30, 41, 59, 0.6);
+    color: #94a3b8;
+    border-color: #334155;
+}
+   </string>
+  </property>
+
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="mainLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+
+    <!-- SIDEBAR -->
+    <item>
+     <widget class="QFrame" name="sidebarFrame">
+      <property name="minimumSize">
+       <size>
+        <width>230</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>230</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="sidebarLayout">
+       <property name="leftMargin">
+        <number>16</number>
+       </property>
+       <property name="topMargin">
+        <number>28</number>
+       </property>
+       <property name="rightMargin">
+        <number>16</number>
+       </property>
+       <property name="bottomMargin">
+        <number>20</number>
+       </property>
+       <property name="spacing">
+        <number>4</number>
+       </property>
+
+       <item>
+        <widget class="QLabel" name="appTitleLabel">
+         <property name="text">
+          <string>LENS</string>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QLabel" name="appSubtitleLabel">
+         <property name="text">
+          <string>Loss-prevention Event Notification System</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <spacer name="sidebarLogoSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>16</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+
+       <item>
+        <widget class="QFrame" name="sidebarDivider">
+         <property name="frameShape">
+          <enum>QFrame::HLine</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <spacer name="sidebarDividerSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>12</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+
+       <item>
+        <widget class="QPushButton" name="liveCamerasButton">
+         <property name="text">
+          <string>Live Cameras</string>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QPushButton" name="incidentsButton">
+         <property name="text">
+          <string>Incidents</string>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <widget class="QPushButton" name="settingsButton">
+         <property name="text">
+          <string>Settings</string>
+         </property>
+        </widget>
+       </item>
+
+       <item>
+        <spacer name="sidebarBottomSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>400</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+
+       <item>
+        <widget class="QLabel" name="systemStatusLabel">
+         <property name="text">
+          <string>System Online</string>
+         </property>
+        </widget>
+       </item>
+
+      </layout>
+     </widget>
+    </item>
+
+    <!-- MAIN CONTENT -->
+    <item>
+     <widget class="QWidget" name="contentWidget">
+      <layout class="QVBoxLayout" name="contentLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+
+       <!-- HEADER -->
+       <item>
+        <widget class="QFrame" name="headerFrame">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>82</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>82</height>
+          </size>
+         </property>
+         <layout class="QHBoxLayout" name="headerLayout">
+          <property name="leftMargin">
+           <number>28</number>
+          </property>
+          <property name="topMargin">
+           <number>16</number>
+          </property>
+          <property name="rightMargin">
+           <number>28</number>
+          </property>
+          <property name="bottomMargin">
+           <number>16</number>
+          </property>
+
+          <item>
+           <layout class="QVBoxLayout" name="pageTitleLayout">
+            <property name="spacing">
+             <number>3</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="pageTitleLabel">
+              <property name="text">
+               <string>Live Cameras</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="pageSubtitleLabel">
+              <property name="text">
+               <string>Monitor camera feeds and suspicious activity alerts in real time.</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+
+          <item>
+           <spacer name="headerSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>260</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+
+          <item>
+           <widget class="QLabel" name="detectionStatusBadge">
+            <property name="minimumSize">
+             <size>
+              <width>155</width>
+              <height>38</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Detection Active</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+
+         </layout>
+        </widget>
+       </item>
+
+       <!-- PAGES -->
+       <item>
+        <widget class="QStackedWidget" name="pagesStackedWidget">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+
+         <!-- LIVE CAMERAS PAGE -->
+         <widget class="QWidget" name="liveCamerasPage">
+          <layout class="QGridLayout" name="cameraGridLayout">
+           <property name="leftMargin">
+            <number>24</number>
+           </property>
+           <property name="topMargin">
+            <number>24</number>
+           </property>
+           <property name="rightMargin">
+            <number>24</number>
+           </property>
+           <property name="bottomMargin">
+            <number>24</number>
+           </property>
+           <property name="horizontalSpacing">
+            <number>16</number>
+           </property>
+           <property name="verticalSpacing">
+            <number>16</number>
+           </property>
+
+           <item row="0" column="0">
+            <widget class="QFrame" name="cameraCard1">
+             <layout class="QVBoxLayout" name="cameraCardLayout1">
+              <property name="leftMargin">
+               <number>16</number>
+              </property>
+              <property name="topMargin">
+               <number>14</number>
+              </property>
+              <property name="rightMargin">
+               <number>16</number>
+              </property>
+              <property name="bottomMargin">
+               <number>16</number>
+              </property>
+              <property name="spacing">
+               <number>10</number>
+              </property>
+
+              <item>
+               <layout class="QHBoxLayout" name="cameraHeaderLayout1">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="cameraTitleLabel1">
+                  <property name="text">
+                   <string>Camera 1 — Entrance</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="cameraSpacer1">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QLabel" name="cameraStatusLabel1">
+                  <property name="text">
+                   <string>● ONLINE</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+
+              <item>
+               <widget class="QLabel" name="cameraPlaceholder1">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>195</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>No feed connected</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+
+             </layout>
+            </widget>
+           </item>
+
+           <item row="0" column="1">
+            <widget class="QFrame" name="cameraCard2">
+             <layout class="QVBoxLayout" name="cameraCardLayout2">
+              <property name="leftMargin">
+               <number>16</number>
+              </property>
+              <property name="topMargin">
+               <number>14</number>
+              </property>
+              <property name="rightMargin">
+               <number>16</number>
+              </property>
+              <property name="bottomMargin">
+               <number>16</number>
+              </property>
+              <property name="spacing">
+               <number>10</number>
+              </property>
+
+              <item>
+               <layout class="QHBoxLayout" name="cameraHeaderLayout2">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="cameraTitleLabel2">
+                  <property name="text">
+                   <string>Camera 2 — Aisle 1</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="cameraSpacer2">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QLabel" name="cameraStatusLabel2">
+                  <property name="text">
+                   <string>● ONLINE</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+
+              <item>
+               <widget class="QLabel" name="cameraPlaceholder2">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>195</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>No feed connected</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+
+             </layout>
+            </widget>
+           </item>
+
+           <item row="1" column="0">
+            <widget class="QFrame" name="cameraCard3">
+             <layout class="QVBoxLayout" name="cameraCardLayout3">
+              <property name="leftMargin">
+               <number>16</number>
+              </property>
+              <property name="topMargin">
+               <number>14</number>
+              </property>
+              <property name="rightMargin">
+               <number>16</number>
+              </property>
+              <property name="bottomMargin">
+               <number>16</number>
+              </property>
+              <property name="spacing">
+               <number>10</number>
+              </property>
+
+              <item>
+               <layout class="QHBoxLayout" name="cameraHeaderLayout3">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="cameraTitleLabel3">
+                  <property name="text">
+                   <string>Camera 3 — Aisle 2</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="cameraSpacer3">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QLabel" name="cameraStatusLabel3">
+                  <property name="text">
+                   <string>● ONLINE</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+
+              <item>
+               <widget class="QLabel" name="cameraPlaceholder3">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>195</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>No feed connected</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+
+             </layout>
+            </widget>
+           </item>
+
+           <item row="1" column="1">
+            <widget class="QFrame" name="cameraCard4">
+             <layout class="QVBoxLayout" name="cameraCardLayout4">
+              <property name="leftMargin">
+               <number>16</number>
+              </property>
+              <property name="topMargin">
+               <number>14</number>
+              </property>
+              <property name="rightMargin">
+               <number>16</number>
+              </property>
+              <property name="bottomMargin">
+               <number>16</number>
+              </property>
+              <property name="spacing">
+               <number>10</number>
+              </property>
+
+              <item>
+               <layout class="QHBoxLayout" name="cameraHeaderLayout4">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="cameraTitleLabel4">
+                  <property name="text">
+                   <string>Camera 4 — Checkout</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="cameraSpacer4">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QLabel" name="cameraStatusLabel4">
+                  <property name="text">
+                   <string>● ONLINE</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+
+              <item>
+               <widget class="QLabel" name="cameraPlaceholder4">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>195</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>No feed connected</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+
+             </layout>
+            </widget>
+           </item>
+
+          </layout>
+         </widget>
+
+         <!-- INCIDENTS PAGE -->
+         <widget class="QWidget" name="incidentsPage">
+          <layout class="QVBoxLayout" name="incidentsPageLayout">
+           <property name="leftMargin">
+            <number>24</number>
+           </property>
+           <property name="topMargin">
+            <number>24</number>
+           </property>
+           <property name="rightMargin">
+            <number>24</number>
+           </property>
+           <property name="bottomMargin">
+            <number>24</number>
+           </property>
+
+           <item>
+            <widget class="QFrame" name="incidentPanel">
+             <layout class="QVBoxLayout" name="incidentPanelLayout">
+              <property name="leftMargin">
+               <number>20</number>
+              </property>
+              <property name="topMargin">
+               <number>20</number>
+              </property>
+              <property name="rightMargin">
+               <number>20</number>
+              </property>
+              <property name="bottomMargin">
+               <number>20</number>
+              </property>
+              <property name="spacing">
+               <number>16</number>
+              </property>
+
+              <item>
+               <widget class="QLabel" name="incidentPanelTitle">
+                <property name="text">
+                 <string>Recent Incidents</string>
+                </property>
+               </widget>
+              </item>
+
+              <item>
+               <widget class="QTableWidget" name="incidentsTable">
+                <property name="rowCount">
+                 <number>5</number>
+                </property>
+                <property name="columnCount">
+                 <number>5</number>
+                </property>
+                <property name="alternatingRowColors">
+                 <bool>false</bool>
+                </property>
+                <property name="showGrid">
+                 <bool>false</bool>
+                </property>
+                <property name="selectionBehavior">
+                 <enum>QAbstractItemView::SelectRows</enum>
+                </property>
+                <attribute name="horizontalHeaderStretchLastSection">
+                 <bool>true</bool>
+                </attribute>
+                <attribute name="verticalHeaderVisible">
+                 <bool>false</bool>
+                </attribute>
+                <column>
+                 <property name="text">
+                  <string>TIME</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>CAMERA</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>EVENT</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>RISK</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>STATUS</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+
+             </layout>
+            </widget>
+           </item>
+
+          </layout>
+         </widget>
+
+         <!-- SETTINGS PAGE -->
+         <widget class="QWidget" name="settingsPage">
+          <layout class="QVBoxLayout" name="settingsPageLayout">
+           <property name="leftMargin">
+            <number>24</number>
+           </property>
+           <property name="topMargin">
+            <number>24</number>
+           </property>
+           <property name="rightMargin">
+            <number>24</number>
+           </property>
+           <property name="bottomMargin">
+            <number>24</number>
+           </property>
+           <property name="spacing">
+            <number>16</number>
+           </property>
+
+           <!-- Top bar: title + Add Camera button -->
+           <item>
+            <layout class="QHBoxLayout" name="settingsTopBarLayout">
+             <property name="spacing">
+              <number>12</number>
+             </property>
+
+             <item>
+              <layout class="QVBoxLayout" name="settingsTitleLayout">
+               <property name="spacing">
+                <number>3</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="settingsTitleLabel">
+                 <property name="text">
+                  <string>Camera Configuration</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #f8fafc; font-size: 22px; font-weight: 700;</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="settingsSubtitleLabel">
+                 <property name="text">
+                  <string>Add and manage IP cameras connected to this system.</string>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">color: #475569; font-size: 13px;</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+
+             <item>
+              <spacer name="settingsTopSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+
+             <item>
+              <widget class="QPushButton" name="addCameraButton">
+               <property name="text">
+                <string>+ Add Camera</string>
+               </property>
+              </widget>
+             </item>
+
+            </layout>
+           </item>
+
+           <!-- Main content: camera list + form side by side -->
+           <item>
+            <layout class="QHBoxLayout" name="settingsContentLayout">
+             <property name="spacing">
+              <number>16</number>
+             </property>
+
+             <!-- Left: camera list table -->
+             <item>
+              <widget class="QFrame" name="cameraListPanel">
+               <layout class="QVBoxLayout" name="cameraListLayout">
+                <property name="leftMargin">
+                 <number>20</number>
+                </property>
+                <property name="topMargin">
+                 <number>20</number>
+                </property>
+                <property name="rightMargin">
+                 <number>20</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>20</number>
+                </property>
+                <property name="spacing">
+                 <number>14</number>
+                </property>
+
+                <item>
+                 <widget class="QLabel" name="cameraListTitle">
+                  <property name="text">
+                   <string>Configured Cameras</string>
+                  </property>
+                 </widget>
+                </item>
+
+                <item>
+                 <widget class="QTableWidget" name="cameraConfigTable">
+                  <property name="rowCount">
+                   <number>0</number>
+                  </property>
+                  <property name="columnCount">
+                   <number>4</number>
+                  </property>
+                  <property name="showGrid">
+                   <bool>false</bool>
+                  </property>
+                  <property name="selectionBehavior">
+                   <enum>QAbstractItemView::SelectRows</enum>
+                  </property>
+                  <property name="editTriggers">
+                   <set>QAbstractItemView::NoEditTriggers</set>
+                  </property>
+                  <attribute name="horizontalHeaderStretchLastSection">
+                   <bool>true</bool>
+                  </attribute>
+                  <attribute name="verticalHeaderVisible">
+                   <bool>false</bool>
+                  </attribute>
+                  <column>
+                   <property name="text">
+                    <string>NAME</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>URL / IP ADDRESS</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>LOCATION</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>STATUS</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+
+               </layout>
+              </widget>
+             </item>
+
+             <!-- Right: add/edit form -->
+             <item>
+              <widget class="QFrame" name="cameraFormPanel">
+               <property name="minimumSize">
+                <size>
+                 <width>320</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>360</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <layout class="QVBoxLayout" name="cameraFormLayout">
+                <property name="leftMargin">
+                 <number>20</number>
+                </property>
+                <property name="topMargin">
+                 <number>20</number>
+                </property>
+                <property name="rightMargin">
+                 <number>20</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>20</number>
+                </property>
+                <property name="spacing">
+                 <number>10</number>
+                </property>
+
+                <item>
+                 <widget class="QLabel" name="cameraFormTitle">
+                  <property name="text">
+                   <string>Add Camera</string>
+                  </property>
+                 </widget>
+                </item>
+
+                <item>
+                 <spacer name="formTitleSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>6</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+
+                <!-- Camera Name -->
+                <item>
+                 <widget class="QLabel" name="labelCameraName">
+                  <property name="text">
+                   <string>CAMERA NAME</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="cameraNameInput">
+                  <property name="placeholderText">
+                   <string>e.g. Entrance Camera</string>
+                  </property>
+                 </widget>
+                </item>
+
+                <!-- RTSP URL -->
+                <item>
+                 <widget class="QLabel" name="labelCameraUrl">
+                  <property name="text">
+                   <string>RTSP URL OR IP ADDRESS</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="cameraUrlInput">
+                  <property name="placeholderText">
+                   <string>rtsp://192.168.1.100:554/stream</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="cameraUrlHint">
+                  <property name="text">
+                   <string>Supports RTSP streams and direct IP addresses.</string>
+                  </property>
+                 </widget>
+                </item>
+
+                <!-- Username -->
+                <item>
+                 <widget class="QLabel" name="labelCameraUsername">
+                  <property name="text">
+                   <string>USERNAME (OPTIONAL)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="cameraUsernameInput">
+                  <property name="placeholderText">
+                   <string>admin</string>
+                  </property>
+                 </widget>
+                </item>
+
+                <!-- Password -->
+                <item>
+                 <widget class="QLabel" name="labelCameraPassword">
+                  <property name="text">
+                   <string>PASSWORD (OPTIONAL)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="cameraPasswordInput">
+                  <property name="placeholderText">
+                   <string>••••••••</string>
+                  </property>
+                  <property name="echoMode">
+                   <enum>QLineEdit::Password</enum>
+                  </property>
+                 </widget>
+                </item>
+
+                <!-- Location -->
+                <item>
+                 <widget class="QLabel" name="labelCameraLocation">
+                  <property name="text">
+                   <string>LOCATION LABEL</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="cameraLocationInput">
+                  <property name="placeholderText">
+                   <string>e.g. Aisle 1, Entrance, Checkout</string>
+                  </property>
+                 </widget>
+                </item>
+
+                <!-- Enable checkbox -->
+                <item>
+                 <spacer name="formCheckboxSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>4</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cameraEnabledCheckbox">
+                  <property name="text">
+                   <string>Enable this camera</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+
+                <!-- Push buttons to bottom -->
+                <item>
+                 <spacer name="formBottomSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>40</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+
+                <!-- Action buttons -->
+                <item>
+                 <layout class="QHBoxLayout" name="formButtonLayout">
+                  <property name="spacing">
+                   <number>10</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="cancelCameraButton">
+                    <property name="text">
+                     <string>Cancel</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="saveCameraButton">
+                    <property name="text">
+                     <string>Save Camera</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+
+               </layout>
+              </widget>
+             </item>
+
+            </layout>
+           </item>
+
+          </layout>
+         </widget>
+
+        </widget>
+       </item>
+
+      </layout>
+     </widget>
+    </item>
+
+   </layout>
+  </widget>
+
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1200</width>
+     <height>23</height>
+    </rect>
+   </property>
+  </widget>
+
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+
+ <resources/>
+ <connections/>
+</ui>
