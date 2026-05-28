@@ -383,6 +383,27 @@ QCheckBox::indicator:hover {
     border-color: #3b82f6;
 }
 
+QPushButton#deleteCameraButton {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: #f87171;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton#deleteCameraButton:hover {
+    background-color: rgba(220, 38, 38, 0.2);
+    color: #fca5a5;
+}
+
+QPushButton#deleteCameraButton:disabled {
+    color: #334155;
+    border-color: #111f35;
+    background-color: transparent;
+}
+
 QPushButton#saveCameraButton {
     background-color: #2563eb;
     color: #ffffff;
@@ -1267,6 +1288,23 @@ QPushButton#cancelCameraButton:hover {
                    </property>
                   </column>
                  </widget>
+                </item>
+
+                <item>
+                 <layout class="QHBoxLayout">
+                  <item>
+                   <spacer>
+                    <property name="orientation"><enum>Qt::Horizontal</enum></property>
+                    <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="deleteCameraButton">
+                    <property name="text"><string>Delete Selected</string></property>
+                    <property name="enabled"><bool>false</bool></property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
 
                </layout>

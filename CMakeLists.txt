@@ -14,12 +14,12 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
-find_package(Qt6 COMPONENTS Widgets QUIET)
+find_package(Qt6 COMPONENTS Widgets Sql QUIET)
 
 if(Qt6_FOUND)
     set(QT_VERSION_MAJOR 6)
 else()
-    find_package(Qt5 REQUIRED COMPONENTS Widgets)
+    find_package(Qt5 REQUIRED COMPONENTS Widgets Sql)
     set(QT_VERSION_MAJOR 5)
 endif()
 
@@ -31,12 +31,14 @@ add_executable(LENS
 
     src/camera/CameraCapture.cpp
     src/camera/CameraManager.cpp
+    src/camera/CameraStore.cpp
     src/camera/CameraWorker.cpp
 
     includes/MainWindow.h
     includes/camera/CameraConfig.h
     includes/camera/CameraCapture.h
     includes/camera/CameraManager.h
+    includes/camera/CameraStore.h
     includes/camera/CameraWorker.h
 
     ui/MainWindow.ui
@@ -57,7 +59,7 @@ target_compile_options(LENS PRIVATE
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    target_link_libraries(LENS PRIVATE Qt6::Widgets ${OpenCV_LIBS})
+    target_link_libraries(LENS PRIVATE Qt6::Widgets Qt6::Sql ${OpenCV_LIBS})
 else()
-    target_link_libraries(LENS PRIVATE Qt5::Widgets ${OpenCV_LIBS})
+    target_link_libraries(LENS PRIVATE Qt5::Widgets Qt5::Sql ${OpenCV_LIBS})
 endif()

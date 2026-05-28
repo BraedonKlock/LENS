@@ -1,10 +1,16 @@
 #include "MainWindow.h"
 
+#include <QCoreApplication>
+#include <QMessageBox>
 #include <QMetaObject>
 #include <QPixmap>
+#include <QTableWidget>
 #include <QTableWidgetItem>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , m_store(QCoreApplication::applicationDirPath() + "/data")
+{
     ui.setupUi(this);
 
     // Set live cameras as the default active page
@@ -16,8 +22,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(ui.settingsButton,    &QPushButton::clicked, this, &MainWindow::onSettingsClicked);
 
     // Settings — camera form
-    connect(ui.saveCameraButton,   &QPushButton::clicked, this, &MainWindow::onSaveCameraClicked);
-    connect(ui.cancelCameraButton, &QPushButton::clicked, this, &MainWindow::onCancelCameraClicked);
+    connect(ui.saveCameraButton,    &QPushButton::clicked,            this, &MainWindow::onSaveCameraClicked);
+    connect(ui.cancelCameraButton,  &QPushButton::clicked,            this, &MainWindow::onCancelCameraClicked);
+    connect(ui.deleteCameraButton,  &QPushButton::clicked,            this, &MainWindow::onDeleteCameraClicked);
+    connect(ui.cameraConfigTable,   &QTableWidget::itemSelectionChanged, this, [this]() {
+        ui.deleteCameraButton->setEnabled(ui.cameraConfigTable->currentRow() >= 0);
+    });
 
     // Reset all 4 camera slots to unconfigured state
     for (int i = 0; i < 4; ++i) {
@@ -25,6 +35,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         if (auto* lbl = frameLabelAt(i))   lbl->setText("No camera configured");
         if (auto* lbl = statusLabelAt(i))  lbl->setVisible(false);
     }
+
+    // Open DB and restore saved cameras
+    m_store.open();
+    for (const auto& cfg : m_store.loadAll())
+        registerCamera(cfg);
 
     // CameraManager callbacks — marshal from worker threads to GUI thread
     cameraManager.setFrameCallback([this](int index, const QImage& image) {
@@ -92,18 +107,71 @@ void MainWindow::onSaveCameraClicked() {
     if (!nameValid) { ui.cameraNameInput->setFocus(); return; }
     if (!urlValid)  { ui.cameraUrlInput->setFocus();  return; }
 
+    CameraConfig cfg;
+    cfg.name     = name;
+    cfg.url      = url;
+    cfg.password = password;
+    cfg.location = location;
+    cfg.enabled  = enabled;
+
+    cfg.id = m_store.save(cfg);
+    registerCamera(cfg);
+    clearCameraForm();
+}
+
+void MainWindow::onCancelCameraClicked() {
+    clearCameraForm();
+}
+
+void MainWindow::onDeleteCameraClicked() {
+    const int row = ui.cameraConfigTable->currentRow();
+    if (row < 0) return;
+
+    const QString name = ui.cameraConfigTable->item(row, 0)->text();
+    const auto answer = QMessageBox::question(
+        this,
+        "Delete Camera",
+        QString("Delete \"%1\"? This cannot be undone.").arg(name),
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel
+    );
+    if (answer != QMessageBox::Yes) return;
+
+    const int id = ui.cameraConfigTable->item(row, 0)->data(Qt::UserRole).toInt();
+    m_store.remove(id);
+
+    // Stop all workers, reset cards, then rebuild from remaining DB rows
+    cameraManager.stopAll();
+    m_cameraCount = 0;
+
+    for (int i = 0; i < 4; ++i) {
+        if (auto* lbl = titleLabelAt(i))  lbl->setText(QString("Camera %1").arg(i + 1));
+        if (auto* lbl = frameLabelAt(i))  lbl->setText("No camera configured");
+        if (auto* lbl = statusLabelAt(i)) lbl->setVisible(false);
+    }
+
+    ui.cameraConfigTable->setRowCount(0);
+    ui.deleteCameraButton->setEnabled(false);
+
+    for (const auto& cfg : m_store.loadAll())
+        registerCamera(cfg);
+}
+
+void MainWindow::registerCamera(const CameraConfig& cfg) {
     int row = ui.cameraConfigTable->rowCount();
     ui.cameraConfigTable->insertRow(row);
-    ui.cameraConfigTable->setItem(row, 0, new QTableWidgetItem(name));
-    ui.cameraConfigTable->setItem(row, 1, new QTableWidgetItem(url));
-    ui.cameraConfigTable->setItem(row, 2, new QTableWidgetItem(location));
-    ui.cameraConfigTable->setItem(row, 3, new QTableWidgetItem(enabled ? "Enabled" : "Disabled"));
+    auto* nameItem = new QTableWidgetItem(cfg.name);
+    nameItem->setData(Qt::UserRole, cfg.id);
+    ui.cameraConfigTable->setItem(row, 0, nameItem);
+    ui.cameraConfigTable->setItem(row, 1, new QTableWidgetItem(cfg.url));
+    ui.cameraConfigTable->setItem(row, 2, new QTableWidgetItem(cfg.location));
+    ui.cameraConfigTable->setItem(row, 3, new QTableWidgetItem(cfg.enabled ? "Enabled" : "Disabled"));
 
-    if (enabled && m_cameraCount < 4) {
+    if (cfg.enabled && m_cameraCount < 4) {
         const int cardIndex = m_cameraCount++;
 
         if (auto* lbl = titleLabelAt(cardIndex)) {
-            const QString title = location.isEmpty() ? name : name + " \xe2\x80\x94 " + location;
+            const QString title = cfg.location.isEmpty() ? cfg.name : cfg.name + " \xe2\x80\x94 " + cfg.location;
             lbl->setText(title);
         }
         if (auto* status = statusLabelAt(cardIndex)) {
@@ -111,22 +179,9 @@ void MainWindow::onSaveCameraClicked() {
             status->setText("● CONNECTING");
         }
 
-        CameraConfig cfg;
-        cfg.name     = name;
-        cfg.url      = url;
-        cfg.password = password;
-        cfg.location = location;
-        cfg.enabled  = true;
-
         cameraManager.addCamera(cfg);
         cameraManager.startAll();
     }
-
-    clearCameraForm();
-}
-
-void MainWindow::onCancelCameraClicked() {
-    clearCameraForm();
 }
 
 void MainWindow::clearCameraForm() {

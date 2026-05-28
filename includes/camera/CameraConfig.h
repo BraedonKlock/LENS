@@ -5,6 +5,7 @@
 
 struct CameraConfig
 {
+	int id = -1;
 	QString name;
 	QString url;
 	QString password;
