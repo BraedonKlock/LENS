@@ -2,126 +2,117 @@
 
 **Loss-prevention Event Notification System**
 
-LENS is an AI-powered suspicious behaviour detection system designed for retail loss prevention. The goal of the project is to help small and medium-sized retail stores make better use of their existing security cameras by identifying activity patterns that may require employee review.
+LENS is an AI-powered retail loss-prevention platform designed to help businesses detect suspicious behaviour in real time using existing security camera infrastructure.
 
-LENS does **not** automatically accuse customers of theft. Instead, it is designed to assist store owners and employees by flagging suspicious behaviour patterns, generating alerts, and helping staff focus on footage that may matter most.
+Unlike traditional security systems that simply record footage for later review, LENS continuously analyzes live camera feeds, identifies suspicious behaviour patterns, records evidence, and generates alerts for staff review.
 
-## Project Overview
+LENS is designed as a local, plug-and-play appliance that runs entirely on-site without requiring cloud infrastructure.
 
-Retail businesses often lose money due to theft, but many smaller stores do not have dedicated loss-prevention teams or the time to constantly monitor security footage. LENS aims to solve this problem by combining computer vision, rule-based behaviour analysis, and alert notifications into a practical monitoring tool.
+## System Architecture
 
-The prototype will focus on live camera viewing from one camera feed and basic suspicious-activity detection. This keeps the scope realistic while still demonstrating the core idea: using computer vision and software logic to detect theft-risk patterns in retail environments.
+LENS consists of two separate applications running on the same local server.
 
-## Key Problems
+### LENS Engine
 
-LENS is designed to address three main problems:
+The **LENS Engine** is the core backend service.
 
-1. Stores waste time and money manually monitoring camera footage.
-2. Existing camera systems mostly record evidence after an incident has already happened.
-3. Retail theft can be difficult to detect in real time, especially for small businesses without dedicated security staff.
+It handles:
 
-## Proposed Solution
-
-LENS will analyze retail security footage and look for behaviour patterns that may indicate suspicious activity, such as:
-
-- Lingering in high-value areas
-- Repeatedly returning to the same shelf or aisle
-- Unusual movement near exits
-- Crowding around certain products
-- Activity within user-defined high-risk zones
-
-When suspicious behaviour is detected, the system can generate an alert for staff to review.
-
-## Planned Tech Stack
-
-### Core Monitoring System
-
-- **Language:** C++
-- **Computer Vision:** OpenCV
-- **Desktop Interface:** Qt
-- **Database:** SQLite
-
-### Mobile Notification App
-
-- **Framework:** React Native
-
-The desktop application will allow store managers to review footage, view alerts, and define high-risk zones. SQLite may be used to store camera zones, alerts, risk scores, and incident history.
-
-A future mobile app could allow managers or employees to receive suspicious-activity notifications, view alert details, and mark incidents as reviewed.
-
-## Core Features
-
-### Prototype Features
-
-- Live camera viewing from one camera feed
-- Basic suspicious-activity detection
-- High-risk zone definition
+- Camera management
+- Video decoding
+- OpenCV processing
+- AI inference with YOLO
+- Behaviour analysis
+- Incident creation
+- Video recording
+- Database management
 - Alert generation
+- Shared memory management
+
+### LENS Dashboard
+
+The **LENS Dashboard** is a Qt desktop application.
+
+It handles:
+
+- Live camera viewing
 - Incident review
-- Local storage of alerts and risk data
+- Camera configuration
+- System monitoring
+- Settings management
+- Alert review
 
-### Future Features
+## Communication Architecture
 
-- Multi-camera support
-- Mobile push notifications
-- Risk scoring dashboard
-- Incident history search
-- Camera zone management
-- Store-level configuration
-- More advanced AI behaviour detection
-- Integration with existing retail camera systems
+### Commands and Configuration
 
-## System Concept
+Dashboard
+→ localhost API
+→ LENS Engine
 
-The system will process video footage from a retail camera and analyze activity within the scene. Store managers will be able to define areas that are more important to monitor, such as expensive product shelves, exits, or blind spots.
+### Alerts and Events
 
-The software will then use computer vision and rule-based logic to detect patterns that may deserve attention. For example, if a person repeatedly enters the same aisle, lingers near a high-value section, or moves unusually close to an exit, LENS may create an alert for staff review.
+LENS Engine
+→ WebSocket
+→ Dashboard
 
-## Project Scope
+### Live Video Preview
 
-The first version of LENS will focus on proving the main concept rather than building a full commercial product immediately.
+LENS Engine
+→ Shared Memory
+→ Dashboard
 
-## Role
+## Planned Technology Stack
 
-**Braedon Klock — Lead Developer / Product Designer**
+### Core Engine
 
-Responsibilities include:
+- C++
+- OpenCV
+- YOLO
+- PostgreSQL
+- REST API (localhost)
+- WebSockets
+- Shared Memory
+- Multithreading
 
-- Product idea development
-- Software design
-- Prototype development
-- Technical documentation
-- Overall project direction
+### Dashboard
 
-## Project Status
-
-LENS is currently in the planning and prototype design stage for **ENG4002 – Project for Entrepreneurs** at Algonquin College.
-
-## Disclaimer
-
-LENS is intended to support human review, not replace human judgment. Alerts generated by the system should be treated as indicators for review, not proof of theft or wrongdoing.
+- Qt
 
 ## Project Directory Structure
 
 ```text
 LENS/
 │
-├── CMakeLists.txt
-├── includes
-│   ├── camera
-│   │   ├── CameraCapture.h
-│   │   ├── CameraConfig.h
-│   │   ├── CameraManager.h
-│   │   └── CameraWorker.h
-│   └── MainWindow.h
-├── README.md
-├── src
-│   ├── camera
-│   │   ├── CameraCapture.cpp
-│   │   ├── CameraManager.cpp
-│   │   └── CameraWorker.cpp
-│   ├── main.cpp
-│   └── MainWindow.cpp
-└── ui
-    └── MainWindow.ui
+├── dashboard
+│   ├── CMakeLists.txt
+│   ├── includes
+│   │   └── MainWindow.h
+│   ├── run.sh
+│   ├── src
+│   │   ├── main.cpp
+│   │   └── MainWindow.cpp
+│   └── ui
+│       └── MainWindow.ui
+├── docs
+│   └── README.md
+└── engine
+    ├── CMakeLists.txt
+    ├── includes
+    │   └── camera
+    │       ├── CameraCapture.h
+    │       ├── CameraConfig.h
+    │       ├── CameraManager.h
+    │       ├── CameraStore.h
+    │       └── CameraWorker.h
+    ├── run.sh
+    └── src
+        ├── camera
+        │   ├── CameraCapture.cpp
+        │   ├── CameraManager.cpp
+        │   ├── CameraStore.cpp
+        │   └── CameraWorker.cpp
+        └── main.cpp
 ```
+
+
