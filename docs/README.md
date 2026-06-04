@@ -2,117 +2,27 @@
 
 **Loss-prevention Event Notification System**
 
-LENS is an AI-powered retail loss-prevention platform designed to help businesses detect suspicious behaviour in real time using existing security camera infrastructure.
+LENS is an AI-powered retail loss-prevention system that uses existing security camera feeds to detect suspicious concealment events and notify users with a short video clip for review.
 
-Unlike traditional security systems that simply record footage for later review, LENS continuously analyzes live camera feeds, identifies suspicious behaviour patterns, records evidence, and generates alerts for staff review.
+Instead of replacing a store’s current DVR/NVR system, LENS runs alongside it. The existing security system continues handling live viewing and recording, while LENS focuses on event detection, incident clips, and alerts.
 
-LENS is designed as a local, plug-and-play appliance that runs entirely on-site without requiring cloud infrastructure.
+---
 
-## System Architecture
+## Overview
 
-LENS consists of two separate applications running on the same local server.
+LENS watches authorized camera feeds in real time and detects suspicious actions such as objects being placed into pockets, bags, or clothing.
 
-### LENS Engine
-
-The **LENS Engine** is the core backend service.
-
-It handles:
-
-- Camera management
-- Video decoding
-- OpenCV processing
-- AI inference with YOLO
-- Behaviour analysis
-- Incident creation
-- Video recording
-- Database management
-- Alert generation
-- Shared memory management
-
-### LENS Dashboard
-
-The **LENS Dashboard** is a Qt desktop application.
-
-It handles:
-
-- Live camera viewing
-- Incident review
-- Camera configuration
-- System monitoring
-- Settings management
-- Alert review
-
-## Communication Architecture
-
-### Commands and Configuration
-
-Dashboard
-→ localhost API
-→ LENS Engine
-
-### Alerts and Events
-
-LENS Engine
-→ WebSocket
-→ Dashboard
-
-### Live Video Preview
-
-LENS Engine
-→ Shared Memory
-→ Dashboard
-
-## Planned Technology Stack
-
-### Core Engine
-
-- C++
-- OpenCV
-- YOLO
-- PostgreSQL
-- REST API (localhost)
-- WebSockets
-- Shared Memory
-- Multithreading
-
-### Dashboard
-
-- Qt
-
-## Project Directory Structure
+When an event is detected, LENS saves a short video clip and sends the incident to a React Native app where the user can review it.
 
 ```text
-LENS/
-│
-├── dashboard
-│   ├── CMakeLists.txt
-│   ├── includes
-│   │   └── MainWindow.h
-│   ├── run.sh
-│   ├── src
-│   │   ├── main.cpp
-│   │   └── MainWindow.cpp
-│   └── ui
-│       └── MainWindow.ui
-├── docs
-│   └── README.md
-└── engine
-    ├── CMakeLists.txt
-    ├── includes
-    │   └── camera
-    │       ├── CameraCapture.h
-    │       ├── CameraConfig.h
-    │       ├── CameraManager.h
-    │       ├── CameraStore.h
-    │       └── CameraWorker.h
-    ├── run.sh
-    └── src
-        ├── camera
-        │   ├── CameraCapture.cpp
-        │   ├── CameraManager.cpp
-        │   ├── CameraStore.cpp
-        │   └── CameraWorker.cpp
-        └── main.cpp
-```
-
-
+Camera Feed
+    ↓
+LENS Engine
+    ↓
+Suspicious Event Detected
+    ↓
+Incident Clip Saved
+    ↓
+User Receives Notification
+    ↓
+User Reviews Clip in React Native App
