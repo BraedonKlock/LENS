@@ -128,32 +128,28 @@ NORMAL / SUSPICIOUS
 ```text
 LENS/
 │
-├── engine/
-│   ├── includes/
-│   ├── src/
-│   ├── CMakeLists.txt
-│   └── run.sh
-│
-├── backend/
-│   ├── src/
-│   ├── package.json
-│   └── README.md
-│
-├── mobile/
-│   ├── src/
-│   ├── package.json
-│   └── README.md
-│
-├── training/
-│   ├── dataset/
-│   ├── train.py
-│   ├── export_onnx.py
-│   └── README.md
-│
-├── docs/
-│   └── README.md
-│
-└── README.md
+├── backend
+├── docs
+│   └── README.md
+├── engine
+│   ├── CMakeLists.txt
+│   ├── includes
+│   │   └── camera
+│   │       ├── CameraCapture.h
+│   │       ├── CameraConfig.h
+│   │       ├── CameraManager.h
+│   │       ├── CameraStore.h
+│   │       └── CameraWorker.h
+│   ├── run.sh
+│   └── src
+│       ├── camera
+│       │   ├── CameraCapture.cpp
+│       │   ├── CameraManager.cpp
+│       │   ├── CameraStore.cpp
+│       │   └── CameraWorker.cpp
+│       └── main.cpp
+├── interface
+└── training
 ```
 
 ---
