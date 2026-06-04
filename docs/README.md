@@ -26,3 +26,161 @@ Incident Clip Saved
 User Receives Notification
     ↓
 User Reviews Clip in React Native App
+```
+
+---
+
+## Architecture
+
+LENS is made up of three main parts:
+
+### LENS Engine
+
+The local engine runs on-site and handles:
+
+- Camera stream connection
+- Video processing
+- AI inference
+- Suspicious event detection
+- Incident clip creation
+- Local storage
+- Sending incidents to the backend
+
+### LENS Backend
+
+The backend handles:
+
+- User accounts
+- Store accounts
+- Subscriptions
+- Incident metadata
+- Notifications
+- App authentication
+
+### LENS Mobile App
+
+The mobile app is built with **React Native** and handles:
+
+- User login
+- Incident notifications
+- Incident list
+- Video clip review
+- Incident status updates
+
+---
+
+## AI Model
+
+The current proof of concept uses a pretrained video model fine-tuned for suspicious concealment detection.
+
+Current model pipeline:
+
+```text
+Video Clip
+    ↓
+Frame Sampling
+    ↓
+VideoMAE Model
+    ↓
+NORMAL / SUSPICIOUS
+```
+
+---
+
+## Planned Technology Stack
+
+### Engine
+
+- C++
+- OpenCV
+- VideoMAE
+- ONNX Runtime
+- SQLite or PostgreSQL
+- REST API
+- Multithreading
+
+### Training
+
+- Python
+- PyTorch
+- HuggingFace Transformers
+- ONNX export
+
+### Backend
+
+- Node.js / Express
+- PostgreSQL
+- Authentication
+- Subscription integration
+- Push notifications
+
+### Mobile App
+
+- React Native
+- Video playback
+- Push notifications
+- Incident review interface
+
+---
+
+## Project Structure
+
+```text
+LENS/
+│
+├── engine/
+│   ├── includes/
+│   ├── src/
+│   ├── CMakeLists.txt
+│   └── run.sh
+│
+├── backend/
+│   ├── src/
+│   ├── package.json
+│   └── README.md
+│
+├── mobile/
+│   ├── src/
+│   ├── package.json
+│   └── README.md
+│
+├── training/
+│   ├── dataset/
+│   ├── train.py
+│   ├── export_onnx.py
+│   └── README.md
+│
+├── docs/
+│   └── README.md
+│
+└── README.md
+```
+
+---
+
+## MVP Goal
+
+The MVP focuses on the core event-detection workflow:
+
+- Connect to a camera feed
+- Run AI inference on video clips
+- Detect suspicious concealment events
+- Save incident clips
+- Send notifications
+- Allow users to review clips in the React Native app
+
+Live camera viewing may be added later, but it is not required for the first version.
+
+---
+
+## Status
+
+LENS is currently in proof-of-concept development.
+
+Current focus:
+
+- Training and testing the VideoMAE concealment model
+- Running ONNX inference in C++
+- Processing video with OpenCV
+- Saving suspicious event clips
+- Designing the backend and React Native incident-review app
