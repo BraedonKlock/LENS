@@ -32,7 +32,7 @@ User Reviews Clip in React Native App
 
 ## Architecture
 
-LENS is made up of three main parts:
+LENS is made up of four main parts:
 
 ### LENS Engine
 
@@ -45,6 +45,21 @@ The local engine runs on-site and handles:
 - Incident clip creation
 - Local storage
 - Sending incidents to the backend
+
+### LENS Desktop App
+
+The desktop app is built with **Electron.js** and **React**. It acts as the local setup and configuration tool for store camera connections.
+
+The desktop app handles:
+
+- Adding store cameras
+- Editing camera connection details
+- Removing cameras
+- Testing camera connections
+- Configuring camera names and locations
+- Sending camera setup information to the local C++ LENS Engine
+
+The desktop app does not perform AI detection itself. The C++ LENS Engine owns the camera connections, video processing, AI inference, recording, and incident creation.
 
 ### LENS Backend
 
@@ -106,6 +121,13 @@ NORMAL / SUSPICIOUS
 - HuggingFace Transformers
 - ONNX export
 
+### Desktop App
+
+- Electron.js
+- React
+- HTML / CSS / JavaScript
+- Local REST API communication with the C++ engine
+
 ### Backend
 
 - Node.js / Express
@@ -128,7 +150,13 @@ NORMAL / SUSPICIOUS
 ```text
 LENS/
 │
+├── app
 ├── backend
+│   ├── api
+│   │   └── loggedIn.js
+│   ├── app.js
+│   └── controllers
+│       └── loggenIn.js
 ├── docs
 │   └── README.md
 ├── engine
@@ -158,25 +186,11 @@ LENS/
 
 The MVP focuses on the core event-detection workflow:
 
+- Configure store cameras through the Electron desktop app
+- Send camera setup information to the local C++ engine
 - Connect to a camera feed
 - Run AI inference on video clips
 - Detect suspicious concealment events
 - Save incident clips
 - Send notifications
 - Allow users to review clips in the React Native app
-
-Live camera viewing may be added later, but it is not required for the first version.
-
----
-
-## Status
-
-LENS is currently in proof-of-concept development.
-
-Current focus:
-
-- Training and testing the VideoMAE concealment model
-- Running ONNX inference in C++
-- Processing video with OpenCV
-- Saving suspicious event clips
-- Designing the backend and React Native incident-review app
