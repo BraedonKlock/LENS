@@ -1,0 +1,123 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="k8ws3bzbDNWk1pIfpjQQ">
+    <mxGraphModel dx="1334" dy="837" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-20" edge="1" parent="1" source="cvXhgKdS-hoTHdw-EfEG-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="220" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-37" edge="1" parent="1" source="cvXhgKdS-hoTHdw-EfEG-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="cvXhgKdS-hoTHdw-EfEG-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="340" width="650" x="250" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-4" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="ENGINE" vertex="1">
+          <mxGeometry height="120" width="250" x="280" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-5" parent="cvXhgKdS-hoTHdw-EfEG-4" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Outbound HTTP requests" vertex="1">
+          <mxGeometry height="30" width="250" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-6" parent="cvXhgKdS-hoTHdw-EfEG-4" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Inbound local host HTTP requests" vertex="1">
+          <mxGeometry height="30" width="250" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-7" parent="cvXhgKdS-hoTHdw-EfEG-4" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Item 3" vertex="1">
+          <mxGeometry height="30" width="250" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-8" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;INTERFACE&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="240" x="640" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-9" parent="cvXhgKdS-hoTHdw-EfEG-8" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Configures Cameras" vertex="1">
+          <mxGeometry height="30" width="240" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-10" parent="cvXhgKdS-hoTHdw-EfEG-8" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Sets up user account info" vertex="1">
+          <mxGeometry height="30" width="240" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-11" parent="cvXhgKdS-hoTHdw-EfEG-8" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Item 3" vertex="1">
+          <mxGeometry height="30" width="240" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-13" edge="1" parent="1" source="cvXhgKdS-hoTHdw-EfEG-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="cvXhgKdS-hoTHdw-EfEG-4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="300" />
+              <mxPoint x="620" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-14" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;b&gt;&lt;font style=&quot;font-size: 25px;&quot;&gt;Server&lt;/font&gt;&lt;/b&gt;" vertex="1">
+          <mxGeometry height="50" width="100" x="525" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-16" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;SWITCH&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="200" x="20" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-17" parent="cvXhgKdS-hoTHdw-EfEG-16" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Connects store cameras to engine" vertex="1">
+          <mxGeometry height="30" width="200" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-21" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="BACKEND" vertex="1">
+          <mxGeometry height="120" width="245" x="452.5" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-22" parent="cvXhgKdS-hoTHdw-EfEG-21" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Router for communication between engine and front end" vertex="1">
+          <mxGeometry height="30" width="245" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-23" parent="cvXhgKdS-hoTHdw-EfEG-21" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Item 2" vertex="1">
+          <mxGeometry height="30" width="245" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-24" parent="cvXhgKdS-hoTHdw-EfEG-21" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Item 3" vertex="1">
+          <mxGeometry height="30" width="245" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-25" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="FRONTEND" vertex="1">
+          <mxGeometry height="130" width="250" x="450" y="840" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-26" parent="cvXhgKdS-hoTHdw-EfEG-25" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Interface for client" vertex="1">
+          <mxGeometry height="30" width="250" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-27" parent="cvXhgKdS-hoTHdw-EfEG-25" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Receives notifications" vertex="1">
+          <mxGeometry height="30" width="250" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-28" parent="cvXhgKdS-hoTHdw-EfEG-25" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="View incident clips" vertex="1">
+          <mxGeometry height="40" width="250" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-29" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="CLOUD STORAGE" vertex="1">
+          <mxGeometry height="120" width="200" x="160" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-30" parent="cvXhgKdS-hoTHdw-EfEG-29" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Stores incident clips" vertex="1">
+          <mxGeometry height="30" width="200" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-31" parent="cvXhgKdS-hoTHdw-EfEG-29" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Item 2" vertex="1">
+          <mxGeometry height="30" width="200" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-32" parent="cvXhgKdS-hoTHdw-EfEG-29" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Item 3" vertex="1">
+          <mxGeometry height="30" width="200" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-33" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;SQL&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="200" x="800" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-34" parent="cvXhgKdS-hoTHdw-EfEG-33" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Stores user credentials" vertex="1">
+          <mxGeometry height="30" width="200" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-35" parent="cvXhgKdS-hoTHdw-EfEG-33" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Stores store details" vertex="1">
+          <mxGeometry height="30" width="200" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-36" parent="cvXhgKdS-hoTHdw-EfEG-33" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" value="Stores Server unique ID" vertex="1">
+          <mxGeometry height="30" width="200" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-38" edge="1" parent="1" source="cvXhgKdS-hoTHdw-EfEG-24" style="endArrow=classic;startArrow=classic;html=1;rounded=0;exitX=0.496;exitY=0.9;exitDx=0;exitDy=0;exitPerimeter=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points" />
+            <mxPoint x="520" y="790" as="sourcePoint" />
+            <mxPoint x="574" y="836" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-39" edge="1" parent="1" source="cvXhgKdS-hoTHdw-EfEG-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="cvXhgKdS-hoTHdw-EfEG-35" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cvXhgKdS-hoTHdw-EfEG-40" edge="1" parent="1" source="cvXhgKdS-hoTHdw-EfEG-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="cvXhgKdS-hoTHdw-EfEG-31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
