@@ -158,6 +158,9 @@ LENS/
 │   └── controllers
 │       └── loggenIn.js
 ├── docs
+│   ├── LENS.drawio
+│   ├── LENS.drawio.png
+│   ├── Logo.jpg
 │   └── README.md
 ├── engine
 │   ├── CMakeLists.txt
