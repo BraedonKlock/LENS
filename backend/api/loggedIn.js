@@ -1,9 +1,13 @@
-const path = require('path'); // importing path for linux OS path compatability
-const express = require('express'); // importing express
-const loggedinController = require('../controllers/loggedin');
+const express             = require('express');
+const auth                = require('../middleware/auth');
+const incidentController  = require('../controllers/incidentController');
 
-const router = express.Router(); // creating a mini express router
+const router = express.Router();
 
-router.get("/incidents", loggedinController.getIncidents);
+router.use(auth);
+
+router.get('/incidents',              incidentController.getIncidents);
+router.get('/incidents/:id/clip',     incidentController.getClipUrl);
+router.patch('/incidents/:id/review', incidentController.markReviewed);
 
 module.exports = router;

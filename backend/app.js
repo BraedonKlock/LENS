@@ -1,12 +1,24 @@
-const express = require("express");
-const http = requires("http");
+require('dotenv').config();
 
-const notLoggedInRoute = require("./api/notLoggedIn");
-const loggedInRoute = require("./api/loggedIn");
+const express    = require('express');
+const http       = require('http');
+const cors       = require('cors');
 
-const app = express();
+const authRoutes     = require('./api/auth');
+const loggedInRoutes = require('./api/loggedIn');
+const engineRoutes   = require('./api/engine');
+
+const app    = express();
 const server = http.createServer(app);
 
-const PORT = process.env.PORT() || 3000;
+app.use(cors());
+app.use(express.json());
 
-server.listen(PORT);
+app.use('/auth',   authRoutes);
+app.use('/',       loggedInRoutes);
+app.use('/engine', engineRoutes);
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`LENS backend running on port ${PORT}`);
+});

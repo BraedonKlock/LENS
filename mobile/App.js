@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -13,7 +13,9 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from './screens/HomeScreen';
 import IncidentsScreen from './screens/IncidentsScreen';
 import IncidentDetailScreen from './screens/IncidentDetailScreen';
+import LoginScreen from './screens/LoginScreen';
 import { NotificationProvider, useNotifications } from './context/NotificationContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import NotificationBell from './components/NotificationBell';
 
 Notifications.setNotificationHandler({
@@ -24,13 +26,13 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const Tab = createBottomTabNavigator();
+const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function IncidentsStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="IncidentsList" component={IncidentsScreen} />
+      <Stack.Screen name="IncidentsList"  component={IncidentsScreen} />
       <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
     </Stack.Navigator>
   );
@@ -49,10 +51,10 @@ function Tabs() {
           paddingTop: 4,
           height: 62,
         },
-        tabBarActiveTintColor: '#58A6FF',
+        tabBarActiveTintColor:   '#58A6FF',
         tabBarInactiveTintColor: '#8B949E',
-        headerStyle: { backgroundColor: '#0D1117' },
-        headerTintColor: '#E6EDF3',
+        headerStyle:      { backgroundColor: '#0D1117' },
+        headerTintColor:  '#E6EDF3',
         headerTitleStyle: { fontWeight: 'bold' },
         headerShadowVisible: false,
       }}
@@ -61,12 +63,10 @@ function Tabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          title: 'LENS Monitor',
-          tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid-outline" size={size} color={color} />
-          ),
-          headerRight: () => (
+          title:        'LENS Monitor',
+          tabBarLabel:  'Dashboard',
+          tabBarIcon:   ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
+          headerRight:  () => (
             <View style={{ marginRight: 8 }}>
               <NotificationBell />
             </View>
@@ -77,13 +77,11 @@ function Tabs() {
         name="Incidents"
         component={IncidentsStack}
         options={{
-          title: 'Incidents',
-          tabBarLabel: 'Incidents',
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="warning-outline" size={size} color={color} />
-          ),
-          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          title:          'Incidents',
+          tabBarLabel:    'Incidents',
+          headerShown:    false,
+          tabBarIcon:     ({ color, size }) => <Ionicons name="warning-outline" size={size} color={color} />,
+          tabBarBadge:    unreadCount > 0 ? unreadCount : undefined,
           tabBarBadgeStyle: { backgroundColor: '#FF4444', fontSize: 10 },
         }}
       />
@@ -91,8 +89,33 @@ function Tabs() {
   );
 }
 
+function AppNavigator() {
+  const { token, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0D1117', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#58A6FF" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <StatusBar style="light" />
+      {token ? (
+        <NotificationProvider>
+          <Tabs />
+        </NotificationProvider>
+      ) : (
+        <LoginScreen />
+      )}
+    </NavigationContainer>
+  );
+}
+
 export default function App() {
-  const notifListener = useRef();
+  const notifListener    = useRef();
   const responseListener = useRef();
 
   useEffect(() => {
@@ -113,12 +136,9 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NotificationProvider>
-        <NavigationContainer>
-          <StatusBar style="light" />
-          <Tabs />
-        </NavigationContainer>
-      </NotificationProvider>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
@@ -126,8 +146,8 @@ export default function App() {
 async function registerForNotifications() {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('lens-alerts', {
-      name: 'LENS Security Alerts',
-      importance: Notifications.AndroidImportance.MAX,
+      name:             'LENS Security Alerts',
+      importance:       Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
     });
   }
@@ -137,8 +157,6 @@ async function registerForNotifications() {
   const { status: existing } = await Notifications.getPermissionsAsync();
   if (existing !== 'granted') {
     const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
-      console.log('Notification permission denied');
-    }
+    if (status !== 'granted') console.log('Notification permission denied');
   }
 }
