@@ -5,16 +5,13 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNotifications } from '../context/NotificationContext';
 
-const SEVERITY = {
-  high: { color: '#FF4444', label: 'HIGH', icon: 'alert-circle' },
-  medium: { color: '#FF9800', label: 'MED', icon: 'warning' },
-  low: { color: '#58A6FF', label: 'LOW', icon: 'information-circle' },
-};
+const ACCENT = '#F5C518';
 
 function relativeTime(date) {
   const d = date instanceof Date ? date : new Date(date);
@@ -27,15 +24,13 @@ function relativeTime(date) {
 }
 
 function IncidentCard({ incident, onPress }) {
-  const sev = SEVERITY[incident.severity] || SEVERITY.medium;
-
   return (
     <TouchableOpacity
       style={[styles.card, !incident.read && styles.cardUnread]}
       onPress={onPress}
       activeOpacity={0.75}
     >
-      <View style={[styles.strip, { backgroundColor: sev.color }]} />
+      <View style={[styles.strip, !incident.read && styles.stripUnread]} />
       <View style={styles.cardBody}>
         <View style={styles.cardTop}>
           <View style={styles.titleRow}>
@@ -43,9 +38,6 @@ function IncidentCard({ incident, onPress }) {
             <Text style={styles.cardTitle} numberOfLines={1}>
               {incident.title}
             </Text>
-          </View>
-          <View style={[styles.sevBadge, { borderColor: sev.color }]}>
-            <Text style={[styles.sevText, { color: sev.color }]}>{sev.label}</Text>
           </View>
         </View>
 
@@ -72,7 +64,7 @@ function IncidentCard({ incident, onPress }) {
 }
 
 export default function IncidentsScreen({ navigation }) {
-  const { incidents, unreadCount, markAllAsRead } = useNotifications();
+  const { incidents, unreadCount, markAllAsRead, refresh, loading } = useNotifications();
   const insets = useSafeAreaInsets();
 
   return (
@@ -104,6 +96,7 @@ export default function IncidentsScreen({ navigation }) {
           )}
           contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
           showsVerticalScrollIndicator={false}
+          refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor="#58A6FF" />}
         />
       )}
     </View>
@@ -138,7 +131,7 @@ const styles = StyleSheet.create({
     borderColor: '#21262D',
   },
   markAllText: {
-    color: '#58A6FF',
+    color: ACCENT,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -154,12 +147,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     overflow: 'hidden',
   },
-  cardUnread: {
-    borderColor: '#FF44441A',
-    backgroundColor: '#1A1010',
-  },
   strip: {
     width: 4,
+    backgroundColor: ACCENT,
+  },
+  stripUnread: {
+    backgroundColor: '#FF4444',
+  },
+  cardUnread: {
+    borderColor: '#FF444433',
+    backgroundColor: '#1A0A0A',
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF4444',
+    flexShrink: 0,
   },
   cardBody: {
     flex: 1,
@@ -178,30 +182,11 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 8,
   },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FF4444',
-    flexShrink: 0,
-  },
   cardTitle: {
     color: '#E6EDF3',
     fontSize: 16,
     fontWeight: '600',
     flex: 1,
-  },
-  sevBadge: {
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    flexShrink: 0,
-  },
-  sevText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    letterSpacing: 0.8,
   },
   metaRow: {
     flexDirection: 'row',

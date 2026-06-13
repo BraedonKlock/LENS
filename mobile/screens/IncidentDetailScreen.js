@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,52 +7,53 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNotifications } from '../context/NotificationContext';
+import { authFetch } from '../utils/api';
 
-const SEVERITY = {
-  high: { color: '#FF4444', label: 'HIGH SEVERITY', icon: 'alert-circle' },
-  medium: { color: '#FF9800', label: 'MEDIUM SEVERITY', icon: 'warning' },
-  low: { color: '#58A6FF', label: 'LOW SEVERITY', icon: 'information-circle' },
-};
-
-function formatTimestamp(date) {
-  const d = date instanceof Date ? date : new Date(date);
-  return d.toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
+function formatTimestamp(iso) {
+  return new Date(iso).toLocaleString('en-US', {
+    year:   'numeric',
+    month:  'short',
+    day:    'numeric',
+    hour:   '2-digit',
     minute: '2-digit',
     second: '2-digit',
   });
 }
 
 export default function IncidentDetailScreen({ route, navigation }) {
-  const { incident } = route.params;
-  const { markAsRead } = useNotifications();
-  const videoRef = useRef(null);
-  const [videoStatus, setVideoStatus] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const insets = useSafeAreaInsets();
+  const { incident }    = route.params;
+  const { markAsRead }  = useNotifications();
+  const insets          = useSafeAreaInsets();
 
-  const sev = SEVERITY[incident.severity] || SEVERITY.medium;
+  const [clipUrl, setClipUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(false);
+
+  const player = useVideoPlayer(clipUrl, p => {
+    p.loop = false;
+  });
 
   useEffect(() => {
     markAsRead(incident.id);
+    fetchClipUrl();
   }, []);
 
-  const togglePlay = async () => {
-    if (!videoRef.current) return;
-    if (videoStatus.isPlaying) {
-      await videoRef.current.pauseAsync();
-    } else {
-      await videoRef.current.playAsync();
+  async function fetchClipUrl() {
+    try {
+      const res = await authFetch(`/incidents/${incident.id}/clip`);
+      if (!res.ok) { setError(true); setLoading(false); return; }
+      const data = await res.json();
+      setClipUrl(data.url);
+      setLoading(false);
+    } catch {
+      setError(true);
+      setLoading(false);
     }
-  };
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -61,9 +62,7 @@ export default function IncidentDetailScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={26} color="#E6EDF3" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Incident Detail
-        </Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>Incident Detail</Text>
         <View style={{ width: 44 }} />
       </View>
 
@@ -82,18 +81,14 @@ export default function IncidentDetailScreen({ route, navigation }) {
               <Text style={styles.errorText}>Could not load video clip</Text>
             </View>
           )}
-          <Video
-            ref={videoRef}
-            style={styles.video}
-            source={{ uri: incident.videoUrl }}
-            useNativeControls
-            resizeMode={ResizeMode.CONTAIN}
-            isLooping={false}
-            onPlaybackStatusUpdate={setVideoStatus}
-            onLoad={() => setLoading(false)}
-            onError={() => { setLoading(false); setError(true); }}
-          />
-          {/* CLIP badge */}
+          {clipUrl && !error && (
+            <VideoView
+              player={player}
+              style={styles.video}
+              fullscreenOptions={{ supportedOrientations: ['landscape'] }}
+              allowsPictureInPicture
+            />
+          )}
           <View style={styles.clipBadge}>
             <View style={styles.recDot} />
             <Text style={styles.clipBadgeText}>CLIP</Text>
@@ -103,22 +98,11 @@ export default function IncidentDetailScreen({ route, navigation }) {
         {/* Info */}
         <View style={styles.info}>
           <Text style={styles.incidentTitle}>{incident.title}</Text>
-          <View style={[styles.sevBadge, { borderColor: sev.color }]}>
-            <Ionicons name={sev.icon} size={14} color={sev.color} />
-            <Text style={[styles.sevText, { color: sev.color }]}>{sev.label}</Text>
-          </View>
-
           <View style={styles.detailsCard}>
-            <DetailRow icon="videocam" label="Camera" value={incident.camera} />
-            <DetailRow icon="time" label="Detected" value={formatTimestamp(incident.timestamp)} />
+            <DetailRow icon="videocam"           label="Camera"    value={incident.camera} />
+            <DetailRow icon="time"               label="Detected"  value={formatTimestamp(incident.timestamp)} />
             <DetailRow icon="document-text-outline" label="Description" value={incident.description} />
-            <DetailRow
-              icon="checkmark-circle"
-              label="Review Status"
-              value="Reviewed"
-              valueColor="#2ECC71"
-              noBorder
-            />
+            <DetailRow icon="checkmark-circle"   label="Review Status" value="Reviewed" valueColor="#2ECC71" noBorder />
           </View>
         </View>
       </ScrollView>
@@ -222,21 +206,6 @@ const styles = StyleSheet.create({
     color: '#E6EDF3',
     fontSize: 24,
     fontWeight: 'bold',
-  },
-  sevBadge: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  sevText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    letterSpacing: 0.8,
   },
   detailsCard: {
     backgroundColor: '#161B22',

@@ -1,92 +1,87 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import * as Notifications from 'expo-notifications';
+import { authFetch } from '../utils/api';
 
 const NotificationContext = createContext(null);
 
-const SAMPLE_INCIDENTS = [
-  {
-    id: '1',
-    title: 'Person Detected',
-    camera: 'Front Entrance — Camera 1',
-    timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    severity: 'high',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    description: 'LENS AI detected a person approaching the front entrance after hours.',
-    read: false,
-  },
-  {
-    id: '2',
-    title: 'Motion Alert',
-    camera: 'Parking Lot — Camera 3',
-    timestamp: new Date(Date.now() - 23 * 60 * 1000),
-    severity: 'medium',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-    description: 'Unexpected motion detected in the parking lot outside of business hours.',
-    read: false,
-  },
-  {
-    id: '3',
-    title: 'Person Detected',
-    camera: 'Side Exit — Camera 2',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    severity: 'low',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-    description: 'Person detected near side exit during normal business hours.',
-    read: true,
-  },
-  {
-    id: '4',
-    title: 'Unauthorized Access Attempt',
-    camera: 'Server Room — Camera 4',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    severity: 'high',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-    description: 'Multiple failed attempts to access the server room detected.',
-    read: true,
-  },
-];
+function mapIncident(raw) {
+  return {
+    id:          raw.id,
+    title:       'Concealment Detected',
+    camera:      raw.camera_id,
+    timestamp:   new Date(raw.timestamp).toISOString(),
+    severity:    'high',
+    read:        raw.reviewed === 1 || raw.reviewed === true,
+    description: `LENS AI detected suspicious concealment activity in ${raw.camera_id}.`,
+  };
+}
 
 export function NotificationProvider({ children }) {
-  const [incidents, setIncidents] = useState(SAMPLE_INCIDENTS);
-  const [unreadCount, setUnreadCount] = useState(
-    SAMPLE_INCIDENTS.filter(i => !i.read).length
-  );
+  const [incidents, setIncidents]   = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading]       = useState(true);
+
+  const fetchIncidents = useCallback(async () => {
+    try {
+      const res = await authFetch('/incidents');
+      if (!res.ok) return;
+      const data = await res.json();
+      const mapped = data.map(mapIncident);
+      setIncidents(mapped);
+      setUnreadCount(mapped.filter(i => !i.read).length);
+    } catch (err) {
+      console.error('Failed to fetch incidents:', err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    setUnreadCount(incidents.filter(i => !i.read).length);
-  }, [incidents]);
+    fetchIncidents();
+  }, []);
 
   useEffect(() => {
-    const subscription = Notifications.addNotificationReceivedListener(notification => {
-      const newIncident = {
-        id: Date.now().toString(),
-        title: notification.request.content.title || 'New Alert',
-        camera: notification.request.content.subtitle || 'Unknown Camera',
-        timestamp: new Date(),
-        severity: notification.request.content.data?.severity || 'medium',
-        videoUrl:
-          notification.request.content.data?.videoUrl ||
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-        description: notification.request.content.body || 'New security alert detected by LENS.',
-        read: false,
-      };
-      setIncidents(prev => [newIncident, ...prev]);
+    const subscription = Notifications.addNotificationReceivedListener(() => {
+      fetchIncidents();
     });
     return () => Notifications.removeNotificationSubscription(subscription);
   }, []);
 
-  const markAsRead = useCallback((id) => {
-    setIncidents(prev =>
-      prev.map(incident => (incident.id === id ? { ...incident, read: true } : incident))
-    );
+  const markAsRead = useCallback(async (id) => {
+    try {
+      await authFetch(`/incidents/${id}/review`, { method: 'PATCH' });
+      setIncidents(prev =>
+        prev.map(i => i.id === id ? { ...i, read: true } : i)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to mark as read:', err.message);
+    }
   }, []);
 
-  const markAllAsRead = useCallback(() => {
-    setIncidents(prev => prev.map(i => ({ ...i, read: true })));
-  }, []);
+  const markAllAsRead = useCallback(async () => {
+    try {
+      await Promise.all(
+        incidents.filter(i => !i.read).map(i =>
+          authFetch(`/incidents/${i.id}/review`, { method: 'PATCH' })
+        )
+      );
+      setIncidents(prev => prev.map(i => ({ ...i, read: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all as read:', err.message);
+    }
+  }, [incidents]);
 
   return (
-    <NotificationContext.Provider value={{ incidents, unreadCount, markAsRead, markAllAsRead }}>
+    <NotificationContext.Provider value={{
+      incidents,
+      unreadCount,
+      loading,
+      markAsRead,
+      markAllAsRead,
+      refresh: fetchIncidents,
+    }}>
       {children}
     </NotificationContext.Provider>
   );

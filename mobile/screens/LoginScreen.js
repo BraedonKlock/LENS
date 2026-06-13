@@ -14,8 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
-
-const API_URL = 'http://192.168.1.234:3000';
+import { API_URL } from '../utils/api';
 
 export default function LoginScreen() {
   const { login } = useAuth();

@@ -1,5 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Image } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync();
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -63,9 +66,15 @@ function Tabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          title:        'LENS Monitor',
           tabBarLabel:  'Dashboard',
           tabBarIcon:   ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
+          headerTitle:  () => (
+            <Image
+              source={require('./assets/lens_logo.jpg')}
+              style={{ width: 80, height: 40 }}
+              resizeMode="contain"
+            />
+          ),
           headerRight:  () => (
             <View style={{ marginRight: 8 }}>
               <NotificationBell />
@@ -92,13 +101,11 @@ function Tabs() {
 function AppNavigator() {
   const { token, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#0D1117', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#58A6FF" />
-      </View>
-    );
-  }
+  useEffect(() => {
+    if (!loading) SplashScreen.hideAsync();
+  }, [loading]);
+
+  if (loading) return null;
 
   return (
     <NavigationContainer>
