@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "LENS Monitor",
+    "slug": "lens-monitor",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lens.monitor"
+    },
+    "android": {
+      "package": "com.lens.monitor",
+      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE"]
+    },
+    "plugins": [
+      ["expo-notifications", { "color": "#FF4444" }],
+      "expo-asset"
+    ]
+  }
+}
