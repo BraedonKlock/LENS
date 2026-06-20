@@ -1,12 +1,27 @@
-#include <QApplication>
-#include "MainWindow.h"
+#include <iostream>
+#include <csignal>
+#include <atomic>
+#include <thread>
 
-int main(int argc, char *argv[])
+static std::atomic<bool> running = true;
+
+static void handleSignal(int)
 {
-    QApplication app(argc, argv);
+	running = false;
+}
 
-    MainWindow window;
-    window.show();
+int main()
+{
+	std::signal(SIGINT,  handleSignal);
+	std::signal(SIGTERM, handleSignal);
 
-    return app.exec();
+	std::cout << "LENS engine starting...\n";
+
+	// TODO: start HTTP server and AI inference pipeline
+
+	while (running)
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+	std::cout << "LENS engine shutting down.\n";
+	return 0;
 }

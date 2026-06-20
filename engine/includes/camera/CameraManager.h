@@ -1,11 +1,9 @@
 #ifndef CAMERAMANAGER_H
 #define CAMERAMANAGER_H
 
-#include <QImage>
-#include <QString>
-
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "CameraConfig.h"
@@ -13,27 +11,23 @@
 
 class CameraManager
 {
-	public:
-    	using FrameCallback = std::function<void(int cameraIndex, const QImage& image)>;
-    	using ErrorCallback = std::function<void(int cameraIndex, const QString& message)>;
+public:
+	using ErrorCallback = std::function<void(int cameraIndex, const std::string& message)>;
 
-    	CameraManager() = default;
-    	~CameraManager();
+	CameraManager() = default;
+	~CameraManager();
 
-    	CameraManager(const CameraManager&) = delete;
-    	CameraManager& operator=(const CameraManager&) = delete;
+	CameraManager(const CameraManager&) = delete;
+	CameraManager& operator=(const CameraManager&) = delete;
 
-    	void addCamera(const CameraConfig& config);
-    	void startAll();
-    	void stopAll();
+	void addCamera(const CameraConfig& config);
+	void startAll();
+	void stopAll();
 
-    	void setFrameCallback(FrameCallback callback);
-    	void setErrorCallback(ErrorCallback callback);
+	void setErrorCallback(ErrorCallback callback);
 
-	private:
-    	std::vector<std::unique_ptr<CameraWorker>> workers;
-
-    	FrameCallback onFrame;
-    	ErrorCallback onError;
+private:
+	std::vector<std::unique_ptr<CameraWorker>> workers;
+	ErrorCallback onError;
 };
 #endif

@@ -7,16 +7,18 @@
 
 class CameraCapture
 {
-	private:
-	CameraConfig config;
-	cv::VideoCapture capture;
-
 	public:
 	explicit CameraCapture(CameraConfig config);
 
 	bool open();
 	bool readFrame(cv::Mat& frame);
 	void close();
+
+	private:
+	bool isFileSource() const;
+
+	CameraConfig config;
+	cv::VideoCapture capture;
 };
 
 #endif

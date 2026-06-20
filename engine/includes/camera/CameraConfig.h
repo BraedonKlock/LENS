@@ -1,14 +1,14 @@
 #ifndef CAMERACONFIG_H
 #define CAMERACONFIG_H
 
-#include <QString>
+#include <string>
 
 struct CameraConfig
 {
 	int id = -1;
-	QString name;
-	QString url;
-	QString password;
-	QString location;
+	std::string name;
+	std::string url;
+	std::string password;
+	std::string location;
 };
 #endif

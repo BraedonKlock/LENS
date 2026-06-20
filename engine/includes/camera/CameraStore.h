@@ -1,23 +1,26 @@
 #ifndef CAMERASTORE_H
 #define CAMERASTORE_H
 
-#include <QString>
+#include <string>
 #include <vector>
 
 #include "CameraConfig.h"
 
-class CameraStore {
+class CameraStore
+{
 public:
-    explicit CameraStore(const QString& dataDir);
+	explicit CameraStore(const std::string& dbPath);
+	~CameraStore();
 
-    bool open();
-    int  save(const CameraConfig& config);
-    void remove(int id);
-    std::vector<CameraConfig> loadAll() const;
+	bool open();
+	int  save(const CameraConfig& config);
+	void remove(int id);
+	std::vector<CameraConfig> loadAll() const;
 
 private:
-    QString m_dataDir;
+	std::string m_dbPath;
+	struct sqlite3* m_db = nullptr;
 
-    bool createTable();
+	bool createTable();
 };
 #endif
