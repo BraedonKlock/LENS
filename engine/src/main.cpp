@@ -1,3 +1,5 @@
+#include "Engine.h"
+
 #include <iostream>
 #include <csignal>
 #include <atomic>
@@ -17,10 +19,12 @@ int main()
 
 	std::cout << "LENS engine starting...\n";
 
-	// TODO: start HTTP server and AI inference pipeline
+	Engine engine;
+	engine.start();
 
-	while (running)
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  	while (running) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  	engine.stop();
 
 	std::cout << "LENS engine shutting down.\n";
 	return 0;
