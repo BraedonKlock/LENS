@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.use(engineAuth);
 
-router.post('/incidents', engineController.createIncident);
+router.post('/incidents/request-upload', engineController.requestUpload);
+router.post('/incidents',                engineController.createIncident);
 
 module.exports = router;

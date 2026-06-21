@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -20,7 +21,11 @@ public:
 	CameraManager(const CameraManager&) = delete;
 	CameraManager& operator=(const CameraManager&) = delete;
 
+	void setConfig(const std::string& backendUrl, const std::string& apiKey);
+
 	void addCamera(const CameraConfig& config);
+	bool isConnected(int cameraId) const;
+	void removeCamera(int cameraId);
 	void startAll();
 	void stopAll();
 
@@ -29,5 +34,9 @@ public:
 private:
 	std::vector<std::unique_ptr<CameraWorker>> workers;
 	ErrorCallback onError;
+	mutable std::mutex m_mutex;
+	bool          m_started    = false;
+	std::string   m_backendUrl;
+	std::string   m_apiKey;
 };
 #endif

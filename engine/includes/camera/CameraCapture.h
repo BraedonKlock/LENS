@@ -10,9 +10,10 @@ class CameraCapture
 	public:
 	explicit CameraCapture(CameraConfig config);
 
-	bool open();
-	bool readFrame(cv::Mat& frame);
-	void close();
+	bool   open();
+	bool   readFrame(cv::Mat& frame);
+	void   close();
+	double getFps() const;
 
 	private:
 	bool isFileSource() const;

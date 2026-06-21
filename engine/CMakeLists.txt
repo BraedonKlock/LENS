@@ -10,14 +10,27 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(OpenCV REQUIRED)
 find_package(SQLite3 REQUIRED)
+find_package(CURL REQUIRED)
 
-add_executable(LENS
+# Set ORT_ROOT when configuring: cmake -DORT_ROOT=/path/to/onnxruntime ..
+option(ENABLE_INFERENCE "Build with ONNX Runtime AI inference" OFF)
+set(ORT_ROOT "" CACHE PATH "ONNX Runtime install prefix")
+if(ENABLE_INFERENCE)
+    find_library(ORT_LIB onnxruntime REQUIRED PATHS ${ORT_ROOT}/lib NO_DEFAULT_PATH)
+endif()
+
+set(LENS_SOURCES
     src/main.cpp
+
+    src/engine/Engine.cpp
+    src/http/HttpServer.cpp
 
     src/camera/CameraCapture.cpp
     src/camera/CameraManager.cpp
     src/camera/CameraStore.cpp
     src/camera/CameraWorker.cpp
+
+    src/incident/IncidentHandler.cpp
 
     includes/camera/CameraConfig.h
     includes/camera/CameraCapture.h
@@ -26,10 +39,29 @@ add_executable(LENS
     includes/camera/CameraWorker.h
 )
 
+if(ENABLE_INFERENCE)
+    list(APPEND LENS_SOURCES
+        src/inference/Inferencer.cpp
+    )
+endif()
+
+add_executable(LENS ${LENS_SOURCES})
+
 target_include_directories(LENS PRIVATE
     includes
+    includes/camera
+    includes/engine
+    includes/http
+    includes/incident
     ${OpenCV_INCLUDE_DIRS}
 )
+
+if(ENABLE_INFERENCE)
+    target_include_directories(LENS PRIVATE
+        includes/inference
+        ${ORT_ROOT}/include
+    )
+endif()
 
 target_compile_options(LENS PRIVATE
     -Wall
@@ -40,5 +72,11 @@ target_compile_options(LENS PRIVATE
 
 target_link_libraries(LENS PRIVATE
     ${OpenCV_LIBS}
-    SQLite3::SQLite3
+    sqlite3
+    CURL::libcurl
 )
+
+if(ENABLE_INFERENCE)
+    target_link_libraries(LENS PRIVATE ${ORT_LIB})
+    target_compile_definitions(LENS PRIVATE LENS_INFERENCE_ENABLED)
+endif()

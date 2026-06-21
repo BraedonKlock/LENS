@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>logo/LENS_LOGO.jpg</file>
+    </qresource>
+</RCC>

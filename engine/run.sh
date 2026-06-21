@@ -2,14 +2,15 @@
 
 set -e
 
-echo "Removing old build folder..."
-rm -rf build
+ORT_ROOT="/home/braedonk/CET-CS/Level05/Project1/POC/onnxruntime-linux-x64-1.26.0"
 
-echo "Configuring project with CMake and Ninja..."
-cmake -S . -B build -G Ninja
+echo "Configuring project with CMake..."
+cmake -S . -B build \
+  -DENABLE_INFERENCE=ON \
+  -DORT_ROOT="$ORT_ROOT"
 
 echo "Building project..."
-cmake --build build
+cmake --build build -j$(nproc)
 
 echo "Running LENS..."
-./build/LENS
+LD_LIBRARY_PATH="$ORT_ROOT/lib" ./build/LENS

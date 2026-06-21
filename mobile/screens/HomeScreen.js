@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 import { useNotifications } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 
 const AISLES = [
   'Aisle 1 — Electronics',
@@ -43,6 +44,7 @@ async function sendTestAlert() {
 
 export default function HomeScreen({ navigation }) {
   const { incidents, unreadCount } = useNotifications();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
 
   return (
@@ -51,6 +53,15 @@ export default function HomeScreen({ navigation }) {
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
       showsVerticalScrollIndicator={false}
     >
+      {/* Store header */}
+      {user?.storeName ? (
+        <View style={styles.storeHeader}>
+          <Ionicons name="business-outline" size={16} color="#58A6FF" />
+          <Text style={styles.storeName}>{user.storeName}</Text>
+          <Text style={styles.storeNumber}>#{user.storeNumber}</Text>
+        </View>
+      ) : null}
+
       {/* Alert banner */}
       {unreadCount > 0 && (
         <TouchableOpacity
@@ -114,6 +125,22 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  storeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 16,
+  },
+  storeName: {
+    color: '#E6EDF3',
+    fontWeight: '700',
+    fontSize: 15,
+    flex: 1,
+  },
+  storeNumber: {
+    color: '#8B949E',
+    fontSize: 13,
   },
   alertBanner: {
     flexDirection: 'row',

@@ -15,8 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/auth',   authRoutes);
-app.use('/',       loggedInRoutes);
 app.use('/engine', engineRoutes);
+app.use('/',       loggedInRoutes);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

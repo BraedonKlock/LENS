@@ -50,3 +50,9 @@ void CameraCapture::close()
 {
 	if (capture.isOpened()) capture.release();
 }
+
+double CameraCapture::getFps() const
+{
+	double fps = capture.get(cv::CAP_PROP_FPS);
+	return (fps > 0 && fps < 200) ? fps : 25.0;
+}

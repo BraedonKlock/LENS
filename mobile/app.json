@@ -34,6 +34,12 @@
       "expo-asset",
       "expo-secure-store",
       "expo-video"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8977e17d-8226-4494-a32c-83a57d2836cb"
+      }
+    },
+    "owner": "braedonk"
   }
 }

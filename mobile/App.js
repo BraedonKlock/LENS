@@ -1,17 +1,20 @@
 import React, { useEffect, useRef } from 'react';
-import { View, ActivityIndicator, Image } from 'react-native';
+import { View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
 import { NavigationContainer } from '@react-navigation/native';
+import { createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'react-native';
 
 import HomeScreen from './screens/HomeScreen';
 import IncidentsScreen from './screens/IncidentsScreen';
@@ -20,6 +23,7 @@ import LoginScreen from './screens/LoginScreen';
 import { NotificationProvider, useNotifications } from './context/NotificationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import NotificationBell from './components/NotificationBell';
+import { authFetch } from './utils/api';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -28,6 +32,8 @@ Notifications.setNotificationHandler({
     shouldSetBadge: true,
   }),
 });
+
+export const navigationRef = createNavigationContainerRef();
 
 const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -43,6 +49,7 @@ function IncidentsStack() {
 
 function Tabs() {
   const { unreadCount } = useNotifications();
+  const { logout } = useAuth();
 
   return (
     <Tab.Navigator
@@ -76,8 +83,14 @@ function Tabs() {
             />
           ),
           headerRight:  () => (
-            <View style={{ marginRight: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8, gap: 12 }}>
               <NotificationBell />
+              <Ionicons
+                name="log-out-outline"
+                size={24}
+                color="#8B949E"
+                onPress={logout}
+              />
             </View>
           ),
         }}
@@ -105,10 +118,16 @@ function AppNavigator() {
     if (!loading) SplashScreen.hideAsync();
   }, [loading]);
 
+  // Register push token with backend whenever user is logged in
+  useEffect(() => {
+    if (!token) return;
+    registerAndSendPushToken();
+  }, [token]);
+
   if (loading) return null;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <StatusBar style="light" />
       {token ? (
         <NotificationProvider>
@@ -126,18 +145,20 @@ export default function App() {
   const responseListener = useRef();
 
   useEffect(() => {
-    registerForNotifications();
-
     notifListener.current = Notifications.addNotificationReceivedListener(n => {
       console.log('Notification received:', n.request.content.title);
     });
+
     responseListener.current = Notifications.addNotificationResponseReceivedListener(r => {
-      console.log('Notification tapped:', r.notification.request.content.title);
+      // Navigate to Incidents tab when user taps a push notification
+      if (navigationRef.isReady()) {
+        navigationRef.navigate('Incidents');
+      }
     });
 
     return () => {
-      Notifications.removeNotificationSubscription(notifListener.current);
-      Notifications.removeNotificationSubscription(responseListener.current);
+      notifListener.current?.remove();
+      responseListener.current?.remove();
     };
   }, []);
 
@@ -150,20 +171,56 @@ export default function App() {
   );
 }
 
-async function registerForNotifications() {
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('lens-alerts', {
-      name:             'LENS Security Alerts',
-      importance:       Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
+async function registerAndSendPushToken() {
+  try {
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('lens-alerts', {
+        name:             'LENS Security Alerts',
+        importance:       Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+      });
+    }
+
+    if (!Device.isDevice) {
+      console.warn('[LENS] Push tokens only work on physical devices');
+      return;
+    }
+
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    let finalStatus = existing;
+    if (existing !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      console.warn('[LENS] Notification permission not granted');
+      return;
+    }
+
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      Constants.easConfig?.projectId;
+
+    const { data: pushToken } = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined
+    );
+    if (!pushToken) {
+      console.warn('[LENS] No push token returned');
+      return;
+    }
+
+    console.log('[LENS] Registering push token:', pushToken);
+    const res = await authFetch('/push-token', {
+      method: 'POST',
+      body:   JSON.stringify({ token: pushToken }),
     });
-  }
-
-  if (!Device.isDevice) return;
-
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') console.log('Notification permission denied');
+    if (!res.ok) {
+      const body = await res.text();
+      console.warn('[LENS] Push token save failed:', res.status, body);
+    } else {
+      console.log('[LENS] Push token registered successfully');
+    }
+  } catch (err) {
+    console.warn('[LENS] Push token registration error:', err.message);
   }
 }

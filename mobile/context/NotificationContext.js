@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { AppState } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { authFetch } from '../utils/api';
 
@@ -20,6 +21,7 @@ export function NotificationProvider({ children }) {
   const [incidents, setIncidents]   = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading]       = useState(true);
+  const appState = useRef(AppState.currentState);
 
   const fetchIncidents = useCallback(async () => {
     try {
@@ -40,11 +42,22 @@ export function NotificationProvider({ children }) {
     fetchIncidents();
   }, []);
 
+  // Re-fetch whenever the app comes back to the foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', nextState => {
+      if (appState.current.match(/inactive|background/) && nextState === 'active') {
+        fetchIncidents();
+      }
+      appState.current = nextState;
+    });
+    return () => sub.remove();
+  }, [fetchIncidents]);
+
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener(() => {
       fetchIncidents();
     });
-    return () => Notifications.removeNotificationSubscription(subscription);
+    return () => subscription.remove();
   }, []);
 
   const markAsRead = useCallback(async (id) => {

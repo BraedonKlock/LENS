@@ -1,6 +1,6 @@
 # LENS Architecture
 
-This document explains the full system architecture of LENS, including every component, how they communicate, how authentication works, how video is stored and delivered, and the reasoning behind each decision.
+This document explains the full system architecture of LENS — every component, how they communicate, how authentication works, how video is stored and delivered, and the reasoning behind each decision.
 
 ---
 
@@ -9,29 +9,30 @@ This document explains the full system architecture of LENS, including every com
 LENS is split across two physical locations: the store and the cloud.
 
 ```text
-┌─────────────────────────────────┐        ┌──────────────────────────────────┐
-│         STORE (On-Premise)      │        │              CLOUD               │
-│              ┌──────────────────────────────────────────────────────┐       │ 
-│  ┌─────────────┐                │  HTTPS │  ┌────────────┐          |       │
-│  │   Engine    │────────────────┼─────────▶ │  Backend   │          |       │
-│  └─────────────┘───▶ ┌────────┐ │        │  └─────┬──────┘          |       │
-│         │ localhost  │ SQLite │          │        │                 |       │
-│  ┌─────────────┐     └────────┘ │        │  ┌─────▼──────┐  ┌──────▼────┐  │
-│  │  Interface  │                │        │  │ PostgreSQL │  │Cloudflare  │  │
-│  └─────────────┘                │        │  └────────────┘  │    R2      │  │
-│                                 │        │                  └─────▲──────┘  │
-└─────────────────────────────────┘        │                        │          │
-                                           │  ┌────────────┐        │          │
-                                           │  │ Mobile App │────────┘          │
-                                           │  └─────┬──────┘  (presigned URL)  │
-                                           │        │                          │
-                                           │  ┌─────▼──────┐                  │
-                                           │  │  Backend   │                  │
-                                           │  └────────────┘                  │
-                                           └──────────────────────────────────┘
+┌──────────────────────────────────┐        ┌───────────────────────────────────┐
+│        STORE (On-Premise)        │        │               CLOUD               │
+│                                  │        │                                   │
+│  ┌─────────────┐   localhost      │        │  ┌────────────┐                  │
+│  │  Interface  │◀──────────────▶ Engine   │  │  Backend   │                  │
+│  └─────────────┘   :7373         │  HTTPS │  │ (Railway)  │                  │
+│                                  │───────▶│  └─────┬──────┘                  │
+│  ┌─────────────┐                 │        │        │                          │
+│  │   Engine    │─────────────────┼───────▶│  ┌─────▼──────┐  ┌────────────┐  │
+│  └──────┬──────┘  HTTPS          │        │  │   MySQL    │  │Cloudflare  │  │
+│         │                        │        │  └────────────┘  │    R2      │  │
+│  ┌──────▼──────┐                 │        │                  └─────▲──────┘  │
+│  │   SQLite    │                 │        │                        │          │
+│  └─────────────┘                 │        │  ┌────────────┐  presigned URL   │
+│                                  │        │  │ Mobile App │────────┘          │
+│  ┌─────────────┐                 │        │  └─────┬──────┘                  │
+│  │  Cameras    │──▶ Engine       │        │        │ HTTPS                   │
+│  └─────────────┘   (RTSP)        │        │  ┌─────▼──────┐                  │
+│                                  │        │  │  Backend   │                  │
+└──────────────────────────────────┘        │  └────────────┘                  │
+                                            └───────────────────────────────────┘
 ```
 
-The Backend never reaches into the store. All communication is outbound from the store to the cloud.
+The backend never reaches into the store. All communication is outbound from the store to the cloud.
 
 ---
 
@@ -42,234 +43,249 @@ The Backend never reaches into the store. All communication is outbound from the
 The engine is the core of the system. It runs as a background process on the store server and handles everything related to cameras and AI detection.
 
 **Responsibilities:**
-- Connecting to camera streams
-- Reading and processing video frames
-- Running AI inference to detect suspicious activity
-- Recording short video clips when events are detected
-- Uploading clips to Cloudflare R2
-- Sending incident metadata to the backend
-- Retrying failed uploads when internet connectivity is restored
+- Connecting to RTSP/HTTP camera streams
+- Reading frames and maintaining a rolling 5-second buffer per camera
+- Running VideoMAE AI inference every 5 frames to detect suspicious concealment
+- On detection: encoding a clip, requesting an R2 presigned URL, uploading the clip, reporting to backend
+- Exposing a local REST API on `127.0.0.1:7373` for the Interface
 
 **Communication:**
-- Listens on localhost for commands from the Interface
-- Sends outbound HTTPS requests to the Backend
-- Uploads directly to Cloudflare R2
+- Listens on `localhost:7373` for commands from the Interface
+- Sends outbound HTTPS to the Backend (incident reporting, presigned URL requests)
+- Uploads clips directly to Cloudflare R2 via presigned PUT URL
 
-The engine never receives inbound connections from the cloud. It only makes outbound requests.
+The engine never receives inbound connections from the cloud.
 
 ---
 
 ### 2. LENS Interface
 
-The Interface is a Qt (C++) desktop application that runs on the same machine as the Engine. It is used by store staff to set up and manage the system.
+A Qt (C++) desktop application that runs on the same machine as the Engine.
 
 **Responsibilities:**
-- Creating a store account (sends request to Backend)
-- Logging in
-- Adding, editing, and removing cameras
-- Testing camera connections
-- Viewing system status
-- Managing settings
+- Creating the store account — validates the server ID, creates user + store in the backend, configures the engine with its API key
+- Adding and removing cameras
+- Viewing live camera connection status (Connected / Connecting...)
 
 **Communication:**
-- Talks to the Engine through localhost only — no internet required for camera config
-- Talks to the Backend over HTTPS for account creation and login
+- Engine: `localhost:7373` REST API (camera management, config setup)
+- Backend: HTTPS (account registration only)
 
 ```text
-Interface → localhost REST API → Engine   (camera config)
-Interface → HTTPS              → Backend  (account management)
+Interface → localhost:7373 → Engine   (camera config, status)
+Interface → HTTPS          → Backend  (register only)
 ```
 
 ---
 
 ### 3. Cloud Backend
 
-Hosted on Railway. The backend is the central hub for everything that lives in the cloud.
+Node.js / Express API hosted on Railway.
 
 **Responsibilities:**
-- User and store account management
-- Authentication (JWT for mobile users, API key for the engine)
-- Storing incident metadata
-- Generating presigned Cloudflare R2 URLs for video access
-- Sending push notifications via Firebase Cloud Messaging (FCM)
-- Authorizing access to incidents by store membership
+- Server ID validation (each physical server has a pre-registered unique ID in the DB)
+- Store account creation with a unique engine API key
+- User login with JWT
+- Engine authentication via `X-API-Key` header → `store_id` lookup
+- Generating presigned R2 PUT URLs for the engine to upload clips
+- Storing incident metadata in MySQL
+- Sending Expo push notifications to registered mobile devices
+- Serving incident list and presigned R2 GET URLs to the mobile app
 
-**Communication:**
-- Receives inbound HTTPS from the Engine
-- Receives inbound HTTPS from the Mobile App
-- Writes to PostgreSQL
-- Communicates with Cloudflare R2 to generate presigned URLs
-- Communicates with FCM to send push notifications
+**Routes:**
+
+| Prefix | Auth | Used by |
+|---|---|---|
+| `/auth` | none | Interface (register, login) |
+| `/engine` | X-API-Key | Engine (upload request, incident report) |
+| `/` | JWT | Mobile app (incidents, push token) |
 
 The backend never initiates contact with the Store Server.
 
 ---
 
-### 4. PostgreSQL (Cloud Database)
-
-Stores all cloud-side persistent data.
-
-**Schema:**
+### 4. MySQL (Cloud Database)
 
 ```sql
-users (
-    id           UUID PRIMARY KEY,
-    email        TEXT UNIQUE NOT NULL,
-    passwordHash TEXT NOT NULL,
-    storeId      UUID REFERENCES stores(id)
+servers (
+    id          VARCHAR(50) PRIMARY KEY,  -- pre-registered e.g. "LENS-STORE-0001"
+    in_use      TINYINT(1) DEFAULT 0,
+    store_id    VARCHAR(36) REFERENCES stores(id),
+    created_at  TIMESTAMP
 )
 
 stores (
-    id          UUID PRIMARY KEY,
-    storeName   TEXT NOT NULL,
-    address     TEXT,
-    phoneNumber TEXT,
-    apiKey      TEXT UNIQUE NOT NULL   -- used by the engine to authenticate
+    id           VARCHAR(36) PRIMARY KEY,
+    store_name   VARCHAR(255) NOT NULL,
+    store_number VARCHAR(50) NOT NULL,
+    api_key      VARCHAR(255) UNIQUE NOT NULL   -- engine credential
+)
+
+users (
+    id            VARCHAR(36) PRIMARY KEY,
+    store_id      VARCHAR(36) REFERENCES stores(id),
+    email         VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL
 )
 
 incidents (
-    id           UUID PRIMARY KEY,
-    storeId      UUID REFERENCES stores(id),
-    cameraId     TEXT,
-    timestamp    TIMESTAMPTZ NOT NULL,
-    clipPath     TEXT NOT NULL,        -- e.g. incidents/store_45/inc_123.mp4
-    incidentType TEXT
+    id            VARCHAR(36) PRIMARY KEY,
+    store_id      VARCHAR(36) REFERENCES stores(id),
+    camera_id     VARCHAR(100),
+    timestamp     DATETIME NOT NULL,
+    clip_path     TEXT NOT NULL,              -- e.g. clips/{store_id}/{timestamp}_cam1.mp4
+    incident_type VARCHAR(100),
+    reviewed      TINYINT(1) DEFAULT 0
+)
+
+push_tokens (
+    id        VARCHAR(36) PRIMARY KEY,
+    user_id   VARCHAR(36) REFERENCES users(id),
+    token     VARCHAR(255) UNIQUE NOT NULL    -- Expo push token
 )
 ```
 
-Camera configuration is **not** stored in the cloud database. It lives only on the engine's local SQLite database. This keeps camera credentials off the cloud and simplifies the setup flow.
+Camera configuration is **not** stored in the cloud. It lives only on the engine's local SQLite.
 
 ---
 
 ### 5. Engine SQLite Database (Local)
 
-The engine maintains its own local SQLite database on the store server.
-
-**Schema:**
-
 ```sql
 cameras (
     id        INTEGER PRIMARY KEY,
     name      TEXT NOT NULL,
-    location  TEXT,
-    streamUrl TEXT NOT NULL,
-    username  TEXT,
+    url       TEXT NOT NULL,
     password  TEXT,
-    status    TEXT DEFAULT 'active'
-)
-
-incidents (
-    id           INTEGER PRIMARY KEY,
-    cameraId     INTEGER REFERENCES cameras(id),
-    timestamp    TEXT NOT NULL,
-    clipPath     TEXT NOT NULL,    -- local file path before upload
-    incidentType TEXT,
-    synced       INTEGER DEFAULT 0 -- 0 = not yet uploaded, 1 = uploaded
+    location  TEXT
 )
 
 config (
     key   TEXT PRIMARY KEY,
-    value TEXT NOT NULL            -- stores the API key and other settings
+    value TEXT NOT NULL
+    -- keys: "api_key", "backend_url"
 )
 ```
 
-The `synced` column on incidents allows the engine to retry uploads if the internet connection was down when an incident was first detected.
+Camera credentials never leave the store server.
 
 ---
 
 ### 6. Cloudflare R2 (Video Storage)
 
-Incident video clips are stored in Cloudflare R2, an S3-compatible object store.
-
-**Why R2:**
-- S3-compatible API — standard tooling works out of the box
-- No egress fees — video streaming does not incur bandwidth costs
-- Straightforward presigned URL support
+Incident clips are stored in R2 under a per-store folder.
 
 **Clip path format:**
 ```text
-incidents/store_{storeId}/inc_{incidentId}.mp4
+clips/{store_id}/{timestamp}_cam{cameraId}.mp4
 ```
 
-The PostgreSQL `incidents` table stores this path. The actual video file lives in R2. The mobile app never receives a permanent R2 URL — it always goes through the backend to get a short-lived presigned URL.
+**Why R2:**
+- No egress fees — video streaming costs nothing regardless of volume
+- S3-compatible API — standard AWS SDK works out of the box
+- Presigned URL support with configurable TTL
+
+The mobile app never receives a permanent R2 URL. The backend always generates a short-lived presigned GET URL (5-minute TTL) on demand. Video never passes through the backend.
 
 ---
 
 ### 7. Mobile App
 
-Built with React Native, published on the Google Play Store.
+React Native (Expo SDK 54).
 
 **Responsibilities:**
-- User login (JWT)
-- Receiving push notifications (FCM)
-- Viewing the incident list
-- Streaming incident video clips via presigned R2 URLs
+- User login (JWT stored in SecureStore)
+- Push token registration with backend on login
+- Receiving Expo push notifications when incidents are detected
+- Fetching incident list from backend (re-fetches on foreground resume)
+- Streaming incident clips via presigned R2 URLs
 - Marking incidents as reviewed
 
 **Communication:**
-- All requests go to the Backend only
-- Video is streamed directly from R2 using presigned URLs issued by the Backend
-- The app never communicates with the Store Server
+- All requests go to the Backend only — the app never talks to the Store Server or R2 directly
+- Video is streamed from R2 using presigned URLs issued by the backend
 
 ---
 
 ## Authentication
 
-LENS uses two separate authentication mechanisms depending on who is making the request.
-
 ### Mobile App → Backend: JWT
 
-Standard user authentication. The user logs in with their email and password. The backend returns a signed JWT. The app includes this token in every subsequent request.
+User logs in with email + password. Backend returns a signed JWT (7-day expiry). App includes it in every request:
 
 ```text
 Authorization: Bearer <jwt_token>
 ```
 
-JWTs are short-lived. Refresh tokens can be added later if needed.
+JWT payload includes `userId` and `storeId` so the backend can scope all data to the correct store.
 
 ### Engine → Backend: Store API Key
 
-The engine is a machine process, not a user. It runs unattended 24/7 and does not have a session. For this reason, the engine uses a static store API key rather than JWT.
-
-The API key is:
-- Generated by the backend when the store account is created
-- Returned to the Interface, which saves it to the engine via localhost
-- Stored in the engine's local `config` SQLite table
-- Sent as a header with every request the engine makes to the backend
+The engine is an always-on background process — not a user session. It uses a static store API key:
 
 ```text
-X-API-Key: <store_api_key>
+X-API-Key: <64-char hex key>
 ```
 
-The backend looks up the store by API key and uses it to associate the incoming incident with the correct store.
+The key is:
+1. Generated by the backend at account creation (`crypto.randomBytes(32).hex()`)
+2. Returned to the Interface via the register response
+3. Sent by the Interface to the engine via `POST localhost:7373/config/setup`
+4. Persisted in the engine's local SQLite `config` table
+5. Loaded on engine startup and passed to every CameraWorker and IncidentHandler
 
-**Why not JWT for the engine:**
-JWT is designed for user sessions — it has an expiry, needs refreshing, and is tied to a login event. An always-on background process does not naturally fit this model. A static API key is simpler, reliable, and the standard pattern for machine-to-machine communication.
+The `engineAuth` middleware does a single DB lookup: `SELECT store_id FROM stores WHERE api_key = ?`. Every subsequent operation is scoped to that `store_id`.
+
+**Why not JWT for the engine:** JWT is designed for user sessions with expiry and refresh. A background machine process running 24/7 without user interaction doesn't fit that model. A static API key is the standard pattern for machine-to-machine auth.
+
+### Server ID Claim (Account Creation)
+
+Each physical server ships with a unique ID pre-registered in the `servers` table (`in_use = 0`). When staff create an account they enter this ID. The backend:
+
+1. Verifies the server ID exists and `in_use = 0`
+2. Creates the store and user in a transaction
+3. Sets `in_use = 1` and links `store_id`
+
+This prevents any second user from claiming the same server and ensures one store account per physical server.
+
+---
+
+## AI Inference
+
+The engine runs a fine-tuned **VideoMAE** binary classification model exported to ONNX.
+
+```text
+Input:   16 frames sampled evenly from the 5-second camera buffer
+         Resized to 224×224, BGR→RGB, ImageNet normalised
+         Tensor shape: [1, 16, 3, 224, 224]
+
+Output:  logits [normal, suspicious]
+         Softmax → P(suspicious)
+         Threshold: 0.5
+```
+
+Inference runs every 5 frames per camera on a dedicated worker thread. A 30-second cooldown prevents the same event triggering multiple incidents.
+
+Model: `model.onnx` + `model.onnx.data` (334 MB weights), loaded via ONNX Runtime 1.26.
 
 ---
 
 ## Video Delivery
 
-When the mobile app requests a video clip, the backend does not proxy the video. Instead it issues a **presigned URL** directly to Cloudflare R2.
-
 ```text
-1. App sends:  GET /incidents/:id/clip
-               Authorization: Bearer <jwt>
+1. Mobile app:   GET /incidents/:id/clip
+                 Authorization: Bearer <jwt>
 
-2. Backend:    Verifies JWT
-               Checks the incident belongs to the user's store
-               Generates a presigned R2 URL with a 5-minute TTL
+2. Backend:      Verifies JWT
+                 Confirms incident.store_id == user.store_id
+                 Generates presigned R2 GET URL (5-min TTL)
 
-3. Backend returns:
-               { "url": "https://r2.example.com/incidents/store_45/inc_123.mp4?X-Amz-Expires=300&..." }
+3. Returns:      { "url": "https://r2.cloudflare.com/clips/...?X-Amz-Expires=300&..." }
 
-4. App streams video directly from R2 using that URL
+4. Mobile app streams video directly from R2
 ```
 
-**Why presigned URLs:**
-- The backend never touches the video bytes — no memory or bandwidth overhead
-- The URL expires after 5 minutes so it cannot be shared or reused
-- R2's no-egress policy means video streaming is free regardless of volume
+The backend never touches the video bytes — no memory or bandwidth overhead on the server.
 
 ---
 
@@ -278,82 +294,86 @@ When the mobile app requests a video clip, the backend does not proxy the video.
 ### Account Creation
 
 ```text
-1. Staff opens LENS Interface
-2. Enters store name, address, email, and password
-3. Interface sends POST /auth/register to Backend
-4. Backend creates user and store records in PostgreSQL
-5. Backend generates a store API key
-6. Backend returns the API key to the Interface
-7. Interface sends the API key to the Engine via localhost
-8. Engine writes the API key to its local config table
+1. Staff opens Interface, enters: Server ID, email, password, store name, store number
+2. Interface → POST /auth/register → Backend
+3. Backend validates Server ID is registered and not in_use
+4. Backend transaction:
+   - INSERT INTO stores (generates api_key)
+   - INSERT INTO users
+   - UPDATE servers SET in_use=1, store_id=<new store>
+5. Backend returns jwt + engine_api_key
+6. Interface → POST localhost:7373/config/setup → Engine
+7. Engine saves api_key + backend_url to SQLite config table
 ```
 
 ### Camera Configuration
 
 ```text
-1. Staff opens LENS Interface
-2. Adds camera details (name, location, stream URL, credentials)
-3. Interface sends request to Engine via localhost
-4. Engine saves the camera to its local SQLite cameras table
-5. Engine connects to the camera stream
+1. Staff opens Interface, enters camera name, URL, password, location
+2. Interface → POST localhost:7373/cameras → Engine
+3. Engine saves camera to SQLite cameras table
+4. Engine starts a CameraWorker thread immediately
+5. Worker connects to the RTSP stream and begins reading frames
 ```
 
-No internet connection is required for this flow. Camera credentials never leave the store server.
+No internet required. Camera credentials never leave the store server.
 
 ### Incident Detection
 
 ```text
-1. Cameras stream video to Engine
-2. Engine samples frames and runs AI inference
-3. Suspicious activity detected
-4. Engine records a short video clip to local disk
-5. Engine uploads the clip to Cloudflare R2
-6. Engine marks the local incident record as synced
-7. Engine sends POST /incidents to Backend with:
-   - X-API-Key header
-   - Incident metadata (cameraId, timestamp, clipPath, incidentType)
-8. Backend stores the incident in PostgreSQL
-9. Backend sends a push notification via FCM to the store's registered devices
+1. CameraWorker reads frames into a rolling 5-second deque buffer
+2. Every 5 frames: Inferencer.classify(buffer)
+   - Samples 16 frames evenly, normalises, runs ONNX session
+   - Returns P(suspicious)
+3. If P ≥ 0.5 AND cooldown has elapsed (30s):
+   a. IncidentHandler starts on a detached thread (shared_ptr keeps it alive)
+   b. Encodes buffer frames to /tmp/lens_{timestamp}.mp4
+   c. POST /engine/incidents/request-upload → Backend returns { uploadUrl, clipPath }
+   d. HTTP PUT clip to R2 presigned URL
+   e. Deletes local /tmp file
+   f. POST /engine/incidents → Backend
+      - Backend inserts incident into MySQL
+      - Backend queries push_tokens for all users in the store
+      - Backend sends Expo push notification to each token
+4. Staff phone receives push notification
+5. App re-fetches incident list (also re-fetches on foreground resume)
 ```
-
-If the upload or backend request fails, the `synced` flag stays 0 and the engine retries on its next cycle.
 
 ### Incident Viewing
 
 ```text
-1. User opens Mobile App
-2. App sends GET /incidents to Backend (JWT auth)
-3. Backend returns incident list for the user's store
-4. User taps an incident
-5. App sends GET /incidents/:id/clip to Backend (JWT auth)
-6. Backend verifies the incident belongs to the user's store
-7. Backend generates a presigned R2 URL (5-minute TTL)
-8. App streams the clip directly from R2
+1. Staff opens app or taps notification
+2. App fetches incident list → GET / incidents (JWT auth)
+3. Staff taps incident → GET /incidents/:id/clip (JWT auth)
+4. Backend generates presigned R2 GET URL (5-min TTL)
+5. App streams clip directly from R2
+6. Staff marks as reviewed → PATCH /incidents/:id/review
 ```
 
 ---
 
 ## Technology Stack
 
-| Layer             | Technology                          |
-|-------------------|-------------------------------------|
-| Engine            | C++, OpenCV, ONNX Runtime, SQLite   |
-| Desktop Interface | Qt (C++)                            |
-| Backend           | Node.js, Express, PostgreSQL        |
-| Video Storage     | Cloudflare R2                       |
-| Push Notifications| Firebase Cloud Messaging (FCM)      |
-| Mobile App        | React Native                        |
-| Backend Hosting   | Railway                             |
+| Layer | Technology |
+|---|---|
+| Engine | C++17, OpenCV, ONNX Runtime 1.26, SQLite3, libcurl, cpp-httplib |
+| Interface | Qt6 (C++), QNetworkAccessManager |
+| Backend | Node.js, Express, MySQL2, JWT (jsonwebtoken), bcrypt, AWS SDK v3 (R2) |
+| Mobile App | React Native, Expo SDK 54, expo-notifications, expo-video, expo-secure-store |
+| Cloud Database | MySQL |
+| Video Storage | Cloudflare R2 |
+| Push Notifications | Expo Push Notifications API |
+| Backend Hosting | Railway |
+| Mobile Builds | EAS Build |
 
 ---
 
-## What Is Intentionally Out of Scope (MVP)
-
-The following are planned for later and are not part of the MVP:
+## What Is Out of Scope (MVP)
 
 - Subscriptions and billing
-- Licensing or seat limits
 - Multi-store management from a single account
-- Camera feed live preview in the mobile app
-- Role-based access control (e.g. manager vs. staff)
+- Camera live preview in the mobile app
+- Role-based access control (manager vs. staff)
 - Audit logs
+- Offline incident retry (synced flag — planned but not yet implemented)
+- iOS support (Android only for now)

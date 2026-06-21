@@ -17,7 +17,7 @@ bool CameraStore::open()
 	if (sqlite3_open(m_dbPath.c_str(), &m_db) != SQLITE_OK)
 		return false;
 
-	return createTable();
+	return createTable() && createConfigTable();
 }
 
 bool CameraStore::createTable()
@@ -32,6 +32,52 @@ bool CameraStore::createTable()
 		");";
 
 	return sqlite3_exec(m_db, sql, nullptr, nullptr, nullptr) == SQLITE_OK;
+}
+
+bool CameraStore::createConfigTable()
+{
+	const char* sql =
+		"CREATE TABLE IF NOT EXISTS config ("
+		"  key   TEXT PRIMARY KEY,"
+		"  value TEXT NOT NULL"
+		");";
+
+	return sqlite3_exec(m_db, sql, nullptr, nullptr, nullptr) == SQLITE_OK;
+}
+
+std::string CameraStore::getConfig(const std::string& key) const
+{
+	const char* sql = "SELECT value FROM config WHERE key = ?;";
+
+	sqlite3_stmt* stmt = nullptr;
+	if (sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+		return {};
+
+	sqlite3_bind_text(stmt, 1, key.c_str(), -1, SQLITE_STATIC);
+
+	std::string result;
+	if (sqlite3_step(stmt) == SQLITE_ROW)
+		result = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+
+	sqlite3_finalize(stmt);
+	return result;
+}
+
+void CameraStore::setConfig(const std::string& key, const std::string& value)
+{
+	const char* sql =
+		"INSERT INTO config (key, value) VALUES (?, ?)"
+		" ON CONFLICT(key) DO UPDATE SET value = excluded.value;";
+
+	sqlite3_stmt* stmt = nullptr;
+	if (sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+		return;
+
+	sqlite3_bind_text(stmt, 1, key.c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 2, value.c_str(), -1, SQLITE_STATIC);
+
+	sqlite3_step(stmt);
+	sqlite3_finalize(stmt);
 }
 
 int CameraStore::save(const CameraConfig& config)
